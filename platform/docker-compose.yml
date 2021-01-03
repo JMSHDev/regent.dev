@@ -9,4 +9,14 @@ services:
     ports:
       - 8000:8000
     env_file:
-      - ./.env.dev
+      - web.env.dev
+    depends_on:
+      - db
+  db:
+    image: postgres:13.1
+    volumes:
+      - postgres_data:/var/lib/postgresql/data/
+    env_file:
+      - db.env.dev
+volumes:
+  postgres_data:
