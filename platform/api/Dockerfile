@@ -8,6 +8,10 @@ WORKDIR /usr/src/api
 ENV PYTHONDONTWRITEBYTECODE 1
 ENV PYTHONUNBUFFERED 1
 
+# Required for twisted
+ENV DEBIAN_FRONTEND noninteractive
+RUN apt update && apt install -y gcc
+
 # install dependencies
 RUN pip install --upgrade pip
 COPY ./requirements.txt .
