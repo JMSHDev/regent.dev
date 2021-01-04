@@ -11,9 +11,8 @@ services:
       - web
   web:
     build: ./api
-    command: daphne -b 0.0.0.0 -p 8000 api.asgi:application
     volumes:
-      - static_volume:/usr/src/api/static
+      - static_volume:/app/static
     expose:
       - 8000
     env_file:

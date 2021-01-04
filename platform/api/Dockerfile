@@ -1,27 +1,28 @@
-# pull official base image
 FROM python:3.8.7-slim-buster
 
-# set work directory
-WORKDIR /usr/src/api
-
-# set environment variables
 ENV PYTHONDONTWRITEBYTECODE 1
 ENV PYTHONUNBUFFERED 1
-
-# Required for twisted
 ENV DEBIAN_FRONTEND noninteractive
-RUN apt update && apt install -y gcc
 
-# install dependencies
-RUN pip install --upgrade pip
-COPY ./requirements.txt .
-RUN pip install -r requirements.txt
+RUN mkdir -p /app
+RUN mkdir -p /app/static
 
-# copy entrypoint.sh
-COPY ./entrypoint.sh .
+WORKDIR /app
+COPY api ./api
+COPY device ./device
+COPY entrypoint.sh .
+COPY manage.py .
+COPY requirements.txt .
 
-# copy project
-COPY . .
+RUN apt update && \
+apt install -y gcc && \
+pip install --upgrade pip && \
+pip install -r requirements.txt && \
+apt purge -y gcc && \
+apt autoremove -y
 
-# run entrypoint.sh
-ENTRYPOINT ["/usr/src/api/entrypoint.sh"]
+RUN addgroup --system app && adduser --system app && usermod -G app app
+RUN chown -R app:app /app
+USER app
+
+ENTRYPOINT ["/app/entrypoint.sh"]
