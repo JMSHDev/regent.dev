@@ -10,7 +10,7 @@ services:
     depends_on:
       - web
   web:
-    build: ./api
+    build: ./web
     volumes:
       - static_volume:/app/static
     expose:
