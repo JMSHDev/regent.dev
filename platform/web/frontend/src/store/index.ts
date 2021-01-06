@@ -1,15 +1,15 @@
 import { InjectionKey } from "vue";
 import { createStore, useStore as baseUseStore, Store } from "vuex";
-import auth from "./modules/auth";
 
-export interface State {
-  auth: typeof auth.state;
-}
+import {state, State} from "@/store/state";
+import mutations from "@/store/mutations";
+import actions from "@/store/actions";
+
 
 export const store = createStore<State>({
-  modules: {
-    auth,
-  },
+  state: state,
+  mutations: mutations,
+  actions: actions
 });
 
 export const key: InjectionKey<Store<State>> = Symbol();

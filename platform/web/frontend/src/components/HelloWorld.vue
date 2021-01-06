@@ -73,7 +73,7 @@ export default defineComponent({
   },
   setup(props) {
     const store = useStore();
-    console.log(store.state.auth.accessToken);
+    console.log(store.state);
   },
 });
 </script>
