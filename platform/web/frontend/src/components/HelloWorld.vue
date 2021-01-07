@@ -71,10 +71,6 @@ export default defineComponent({
   props: {
     msg: String,
   },
-  setup(props) {
-    const store = useStore();
-    console.log(store.state.auth.accessToken);
-  },
 });
 </script>
 

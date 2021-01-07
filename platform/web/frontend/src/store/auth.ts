@@ -1,63 +1,43 @@
 import { Commit } from "vuex";
-import { RouteLocationRaw } from "vue-router";
-import router from "@/router";
+import { loginUser, logoutUser } from "@/services/api/auth"
 
 // types
 export interface AuthState {
-  accessToken: string;
-  refreshToken: string;
-}
-
-// helpers
-function getTokensFromLocal() {
-  const accessToken = localStorage.getItem("accessToken") || "";
-  const refreshToken = localStorage.getItem("refreshToken") || "";
-  return { accessToken, refreshToken };
-}
-
-function putTokensToLocal(accessToken: string, refreshToken: string) {
-  localStorage.setItem("accessToken", accessToken);
-  localStorage.setItem("refreshToken", refreshToken);
-}
-
-function delTokensFromLocal() {
-  localStorage.removeItem("accessToken");
-  localStorage.removeItem("refreshToken");
+  user: string | null;
+  isLoggedIn: boolean;
 }
 
 // state
-const state = getTokensFromLocal();
+const state: AuthState = { user: null, isLoggedIn: false };
 
 // mutations
 const mutations = {
-  setTokens(state: AuthState, { accessToken, refreshToken }: { accessToken: string; refreshToken: string }) {
-    state.accessToken = accessToken;
-    state.refreshToken = refreshToken;
+  loginSuccess(state: AuthState, userId: string) {
+    state.user = userId;
+    state.isLoggedIn = true;
   },
-  deleteTokens(state: AuthState) {
-    state.accessToken = "";
-    state.refreshToken = "";
+  logout(state: AuthState) {
+    state.user = null;
+    state.isLoggedIn = false;
   },
 };
 
 // actions
 const actions = {
-  async login(
-    { commit }: { commit: Commit },
-    {
-      accessToken,
-      refreshToken,
-      routerRedirect,
-    }: { accessToken: string; refreshToken: string; routerRedirect: RouteLocationRaw }
-  ) {
-    putTokensToLocal(accessToken, refreshToken);
-    commit("setTokens", { accessToken, refreshToken });
-    await router.push(routerRedirect);
+  login({ commit }: { commit: Commit }, { username, password }: { username: string; password: string }) {
+    return loginUser(username, password)
+      .then(() => {
+        commit({ type: "loginSuccess", username });
+        return Promise.resolve();
+      })
+      .catch((error: any) => {
+        commit({ type: "logout" });
+        return Promise.reject(error);
+      });
   },
-  async logout({ commit }: { commit: Commit }, { routerRedirect }: { routerRedirect: RouteLocationRaw }) {
-    delTokensFromLocal();
-    commit("deleteTokens");
-    await router.push(routerRedirect);
+  logout({ commit }: { commit: Commit }) {
+    logoutUser();
+    commit("logout");
   },
 };
 
@@ -65,5 +45,5 @@ export const auth = {
   state: state,
   mutations: mutations,
   actions: actions,
-  string: true
-}
+  string: true,
+};
