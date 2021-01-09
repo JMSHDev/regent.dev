@@ -1,0 +1,4 @@
+{
+  "PathToExecutable": "go_build_ExampleApp_go.exe",
+  "Arguments": "foo"
+}
