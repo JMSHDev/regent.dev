@@ -1,7 +1,7 @@
 import { createRouter, createWebHistory, RouteRecordRaw } from "vue-router";
 import Home from "../views/Home.vue";
 import Login from "../views/Login.vue";
-// import AuthenticatedPing from "../views/AuthenticatedPing.vue";
+import AuthenticatedPing from "../views/AuthennticatedPing.vue";
 
 import { isUserLoggedIn } from "@/services/api/auth";
 
@@ -18,11 +18,11 @@ const routes: Array<RouteRecordRaw> = [
     name: "Login",
     component: Login,
   },
-  // {
-  //   path: "/ping",
-  //   name: "AuthenticatedPing",
-  //   component: AuthenticatedPing,
-  // },
+  {
+    path: "/ping",
+    name: "AuthenticatedPing",
+    component: AuthenticatedPing,
+  },
 ];
 
 const router = createRouter({

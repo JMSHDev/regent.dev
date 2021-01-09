@@ -6,7 +6,7 @@ import { RootState, rootState } from "@/store/root";
 export interface State extends RootState {}
 
 export const store = createStore({
-  state: rootState,
+
 });
 
 export const key: InjectionKey<Store<State>> = Symbol();

@@ -10,7 +10,12 @@
           <li class="nav-item">
             <router-link class="nav-link" to="/">Home</router-link>
           </li>
+          <li class="nav-item">
+            <router-link class="nav-link" to="/ping">Ping</router-link>
+          </li>
         </ul>
+
+        <button class="d-flex btn btn-danger" @click="handleLogout">Logout</button>
       </div>
     </div>
   </nav>
@@ -18,6 +23,7 @@
 
 <script lang="ts">
 import { defineComponent, reactive } from "vue";
+import { logoutUser } from "@/services/api/auth";
 
 export default defineComponent({
   name: "NavBar",
@@ -30,7 +36,11 @@ export default defineComponent({
       state.collapse === "collapse" ? (state.collapse = "collapse show") : (state.collapse = "collapse");
     };
 
-    return { state, switchCollapse };
+    const handleLogout = () => {
+      logoutUser();
+    };
+
+    return { state, switchCollapse, handleLogout };
   },
 });
 </script>

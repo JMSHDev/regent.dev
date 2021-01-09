@@ -1,9 +1,5 @@
 // types
-export interface RootState {
-  navVisible: boolean;
-}
+export interface RootState {}
 
 // state
-export const rootState: RootState = {
-  navVisible: true,
-};
+export const rootState: RootState = {};
