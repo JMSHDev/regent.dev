@@ -11,7 +11,6 @@
 import { defineComponent, reactive } from "vue";
 import NavBar from "@/components/NavBar.vue";
 import { ping } from "@/services/api/ping";
-import { logoutUser } from "@/services/api/auth";
 
 export default defineComponent({
   name: "AuthenticatedPing",

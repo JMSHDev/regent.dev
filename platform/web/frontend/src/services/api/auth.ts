@@ -1,5 +1,6 @@
 import axios, { AxiosError } from "axios";
 import router from "@/router";
+import { RouteLocationRaw } from "vue-router";
 
 const ACCESS_TOKEN = "access_token";
 const REFRESH_TOKEN = "refresh_token";
@@ -30,13 +31,14 @@ const authRequest = axios.create({
   },
 });
 
-const loginUser = async (username: string, password: string) => {
+const loginUser = async (username: string, password: string, redirect: RouteLocationRaw) => {
   const response = await tokenRequest.post("/api/token/both/", { username, password });
   localStorage.setItem(ACCESS_TOKEN, response.data.access);
   localStorage.setItem(REFRESH_TOKEN, response.data.refresh);
   localStorage.setItem(USERNAME, username);
 
   authRequest.defaults.headers.Authorization = `Bearer ${response.data.access}`;
+  await router.push(redirect)
 };
 
 const refreshToken = async () => {
@@ -47,12 +49,12 @@ const refreshToken = async () => {
   authRequest.defaults.headers.Authorization = `Bearer ${response.data.access}`;
 };
 
-const logoutUser = () => {
+const logoutUser = async () => {
   localStorage.removeItem(ACCESS_TOKEN);
   localStorage.removeItem(REFRESH_TOKEN);
   localStorage.removeItem(USERNAME);
   authRequest.defaults.headers.Authorization = "";
-  router.push({ name: "Login" }).then(() => {});
+  await router.push({ name: "Login" });
 };
 
 const errorInterceptor = async (error: AxiosError) => {
@@ -67,7 +69,7 @@ const errorInterceptor = async (error: AxiosError) => {
       originalRequest.skipIntercept = true;
       return authRequest(originalRequest);
     } catch (error) {
-      logoutUser();
+      await logoutUser();
       throw error;
     }
   }
