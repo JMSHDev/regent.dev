@@ -1,11 +1,11 @@
 import { createRouter, createWebHistory, RouteRecordRaw } from "vue-router";
 import Home from "../views/Home.vue";
-// import Login from "../views/Login.vue";
+import Login from "../views/Login.vue";
 // import AuthenticatedPing from "../views/AuthenticatedPing.vue";
 
 import { isUserLoggedIn } from "@/services/api/auth";
 
-const PUBLIC_PATHS = ["/", "/login"];
+const PUBLIC_PATHS = ["/login"];
 
 const routes: Array<RouteRecordRaw> = [
   {
@@ -13,11 +13,11 @@ const routes: Array<RouteRecordRaw> = [
     name: "Home",
     component: Home,
   },
-  // {
-  //   path: "/login",
-  //   name: "Login",
-  //   component: Login,
-  // },
+  {
+    path: "/login",
+    name: "Login",
+    component: Login,
+  },
   // {
   //   path: "/ping",
   //   name: "AuthenticatedPing",
@@ -26,7 +26,7 @@ const routes: Array<RouteRecordRaw> = [
 ];
 
 const router = createRouter({
-  history: createWebHistory(process.env.BASE_URL),
+  history: createWebHistory(),
   routes,
 });
 

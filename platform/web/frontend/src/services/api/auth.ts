@@ -15,26 +15,16 @@ const tokenRequest = axios.create({
 });
 
 const loginUser = async (username: string, password: string) => {
-  try {
-    const response = await tokenRequest.post("/api/token/both/", { username, password });
-    localStorage.setItem(ACCESS_TOKEN, response.data.refresh);
-    localStorage.setItem(REFRESH_TOKEN, response.data.refresh);
-    localStorage.setItem(USERNAME, username);
-  } catch (error) {
-    console.log(error);
-    throw error;
-  }
+  const response = await tokenRequest.post("/api/token/both/", { username, password });
+  localStorage.setItem(ACCESS_TOKEN, response.data.refresh);
+  localStorage.setItem(REFRESH_TOKEN, response.data.refresh);
+  localStorage.setItem(USERNAME, username);
 };
 
 const refreshToken = async () => {
   const refreshBody = { refresh: localStorage.getItem(REFRESH_TOKEN) };
-  try {
-    const response = await tokenRequest.post("/api/token/access/", refreshBody);
-    localStorage.setItem(ACCESS_TOKEN, response.data.access);
-  } catch (error) {
-    console.log(error);
-    throw error;
-  }
+  const response = await tokenRequest.post("/api/token/access/", refreshBody);
+  localStorage.setItem(ACCESS_TOKEN, response.data.access);
 };
 
 const authRequest = axios.create({
