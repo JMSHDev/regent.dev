@@ -1,4 +1,4 @@
-import axios, { AxiosError } from "axios";
+import axios, { AxiosError, AxiosRequestConfig } from "axios";
 import router from "@/router";
 import { RouteLocationRaw } from "vue-router";
 
@@ -25,7 +25,6 @@ const authRequest = axios.create({
   timeout: process.env.VUE_APP_API_TIMEOUT,
   skipIntercept: false,
   headers: {
-    Authorization: `Bearer ${localStorage.getItem(ACCESS_TOKEN)}`,
     "Content-Type": "application/json",
   },
 });
@@ -36,44 +35,44 @@ const loginUser = async (username: string, password: string, redirect: RouteLoca
   localStorage.setItem(REFRESH_TOKEN, response.data.refresh);
   localStorage.setItem(USERNAME, username);
 
-  authRequest.defaults.headers.Authorization = `Bearer ${response.data.access}`;
-  await router.push(redirect)
+  await router.push(redirect);
 };
 
 const refreshToken = async () => {
   const refreshBody = { refresh: localStorage.getItem(REFRESH_TOKEN) };
   const response = await anonRequest.post("/api/token/access/", refreshBody);
   localStorage.setItem(ACCESS_TOKEN, response.data.access);
-
-  authRequest.defaults.headers.Authorization = `Bearer ${response.data.access}`;
 };
 
 const logoutUser = async () => {
   localStorage.removeItem(ACCESS_TOKEN);
   localStorage.removeItem(REFRESH_TOKEN);
   localStorage.removeItem(USERNAME);
-  authRequest.defaults.headers.Authorization = "";
   await router.push({ name: "Login" });
 };
 
 const errorInterceptor = async (error: AxiosError) => {
-  const originalRequest = error.config;
+  const originalConfig = error.config;
   const status = error.response?.status;
-  const accessToken = localStorage.getItem(ACCESS_TOKEN);
-  if (status === 401 && accessToken && !originalRequest.skipIntercept) {
+  if (status === 401 && !originalConfig.skipIntercept) {
     try {
       await refreshToken();
-      const newAccessToken = localStorage.getItem(ACCESS_TOKEN);
-      originalRequest.headers.Authorization = `Bearer ${newAccessToken}`;
-      originalRequest.skipIntercept = true;
-      return authRequest(originalRequest);
-    } catch (error) {
+      originalConfig.skipIntercept = true;
+      return authRequest(originalConfig);
+    } catch (refreshTokenError) {
       await logoutUser();
-      throw error;
+      throw refreshTokenError;
     }
   }
   throw error;
 };
+
+const authHeaderInterceptor = (requestConfig: AxiosRequestConfig) => {
+  requestConfig.headers.Authorization = `Bearer ${localStorage.getItem(ACCESS_TOKEN)}`;
+  return requestConfig;
+};
+
+authRequest.interceptors.request.use(authHeaderInterceptor);
 
 authRequest.interceptors.response.use(
   (response) => response,
