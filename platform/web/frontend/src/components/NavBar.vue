@@ -24,6 +24,7 @@
 <script lang="ts">
 import { defineComponent, reactive } from "vue";
 import { logoutUser } from "@/services/api/auth";
+import router from "@/router";
 
 export default defineComponent({
   name: "NavBar",
@@ -38,6 +39,7 @@ export default defineComponent({
 
     const handleLogout = () => {
       logoutUser();
+      router.push({ name: "Login" });
     };
 
     return { state, switchCollapse, handleLogout };

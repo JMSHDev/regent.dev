@@ -1,6 +1,4 @@
 import axios, { AxiosError, AxiosRequestConfig } from "axios";
-import router from "@/router";
-import { RouteLocationRaw } from "vue-router";
 
 const ACCESS_TOKEN = "access_token";
 const REFRESH_TOKEN = "refresh_token";
@@ -29,13 +27,11 @@ const authRequest = axios.create({
   },
 });
 
-const loginUser = async (username: string, password: string, redirect: RouteLocationRaw) => {
+const loginUser = async (username: string, password: string) => {
   const response = await anonRequest.post("/api/token/both/", { username, password });
   localStorage.setItem(ACCESS_TOKEN, response.data.access);
   localStorage.setItem(REFRESH_TOKEN, response.data.refresh);
   localStorage.setItem(USERNAME, username);
-
-  await router.push(redirect);
 };
 
 const refreshToken = async () => {
@@ -44,11 +40,10 @@ const refreshToken = async () => {
   localStorage.setItem(ACCESS_TOKEN, response.data.access);
 };
 
-const logoutUser = async () => {
+const logoutUser = () => {
   localStorage.removeItem(ACCESS_TOKEN);
   localStorage.removeItem(REFRESH_TOKEN);
   localStorage.removeItem(USERNAME);
-  await router.push({ name: "Login" });
 };
 
 const errorInterceptor = async (error: AxiosError) => {

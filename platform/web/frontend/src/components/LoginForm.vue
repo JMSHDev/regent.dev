@@ -31,6 +31,7 @@
 <script lang="ts">
 import { defineComponent, reactive } from "vue";
 import { loginUser } from "@/services/api/auth";
+import router from "@/router";
 
 export default defineComponent({
   name: "LoginForm",
@@ -43,15 +44,18 @@ export default defineComponent({
       password: "",
     });
 
-    const handleLogin = (event: Event) => {
+    const handleLogin = async (event: Event) => {
       state.submitting = true;
       event.preventDefault();
 
-      loginUser(state.username, state.password, state.nextPath).catch(() => {
+      try {
+        await loginUser(state.username, state.password);
+        await router.push(state.nextPath);
+      } catch {
         state.invalidCredentials = true;
         state.password = "";
         state.submitting = false;
-      });
+      }
     };
 
     return { state, handleLogin };
