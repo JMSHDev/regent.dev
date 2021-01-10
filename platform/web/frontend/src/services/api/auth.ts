@@ -12,12 +12,11 @@ declare module "axios" {
   }
 }
 
-const tokenRequest = axios.create({
+const anonRequest = axios.create({
   baseURL: process.env.VUE_APP_ROOT_API,
   timeout: process.env.VUE_APP_API_TIMEOUT,
   headers: {
     "Content-Type": "application/json",
-    accept: "application/json",
   },
 });
 
@@ -32,7 +31,7 @@ const authRequest = axios.create({
 });
 
 const loginUser = async (username: string, password: string, redirect: RouteLocationRaw) => {
-  const response = await tokenRequest.post("/api/token/both/", { username, password });
+  const response = await anonRequest.post("/api/token/both/", { username, password });
   localStorage.setItem(ACCESS_TOKEN, response.data.access);
   localStorage.setItem(REFRESH_TOKEN, response.data.refresh);
   localStorage.setItem(USERNAME, username);
@@ -43,7 +42,7 @@ const loginUser = async (username: string, password: string, redirect: RouteLoca
 
 const refreshToken = async () => {
   const refreshBody = { refresh: localStorage.getItem(REFRESH_TOKEN) };
-  const response = await tokenRequest.post("/api/token/access/", refreshBody);
+  const response = await anonRequest.post("/api/token/access/", refreshBody);
   localStorage.setItem(ACCESS_TOKEN, response.data.access);
 
   authRequest.defaults.headers.Authorization = `Bearer ${response.data.access}`;
@@ -91,4 +90,4 @@ const isUserLoggedIn = () => {
   return userInfo().username != null;
 };
 
-export { loginUser, logoutUser, userInfo, isUserLoggedIn, authRequest };
+export { loginUser, logoutUser, userInfo, isUserLoggedIn, authRequest, anonRequest };
