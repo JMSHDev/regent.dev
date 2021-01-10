@@ -6,6 +6,7 @@ from rest_framework import routers
 
 router = routers.DefaultRouter()
 router.register("ping", views.PingViewSet, basename="ping")
+router.register(r"devices", views.DeviceViewSet)
 
 urlpatterns = [
     path("api/token/access/", TokenRefreshView.as_view(), name="token_get_access"),
