@@ -13,6 +13,7 @@ import (
 type Config struct {
 	PathToExecutable string
 	Arguments        string
+	AutoRestart      bool
 }
 
 func main() {
@@ -35,6 +36,7 @@ func main() {
 
 	err = cmd.Run()
 	if err != nil {
+		// was unable to run the program... probably should log & try again after a few seconds
 		log.Fatal(err)
 	}
 	fmt.Printf("%q\n", out.String())
@@ -68,6 +70,7 @@ func saveDefaultConfig() Config {
 	defaultConfig := Config{
 		PathToExecutable: "fish",
 		Arguments:        "face",
+		AutoRestart:      true,
 	}
 	jsonValue, err := json.MarshalIndent(defaultConfig, "", "  ")
 	if err != nil {
