@@ -1,9 +1,15 @@
 package main
 
-import "time"
+import (
+	"fmt"
+	"os"
+	"time"
+)
 
 func main() {
-	print("Zzzzzz\n")
+	argsWithoutProg := os.Args[1:]
+	fmt.Printf("%+v\n", argsWithoutProg)
+	fmt.Println("Zzzzzz")
 	time.Sleep(5 * time.Second)
-	print("Done")
+	fmt.Println("Done")
 }

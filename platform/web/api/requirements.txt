@@ -1,0 +1,8 @@
+django
+django-filter
+django-cors-headers
+djangorestframework
+djangorestframework-simplejwt
+markdown
+psycopg2-binary
+daphne
