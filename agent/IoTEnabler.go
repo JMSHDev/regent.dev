@@ -16,11 +16,16 @@ type Config struct {
 }
 
 func main() {
-	config := loadConfig()
+	config, err := loadConfig()
+	if err != nil {
+		saveDefaultConfig()
+		log.Fatal("Config not found - created default")
+	}
+
 	log.Printf("%v\n", config)
 
 	cmd := exec.Command(config.PathToExecutable, config.Arguments)
-	_, err := cmd.StdinPipe()
+	_, err = cmd.StdinPipe()
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -35,12 +40,11 @@ func main() {
 	fmt.Printf("%q\n", out.String())
 }
 
-func loadConfig() Config {
+func loadConfig() (Config, error) {
 	f, err := os.Open("config.json")
 	if err != nil {
 		//no valid config found - make a new one and return it
-		saveDefaultConfig()
-		log.Fatal("No config found - saving default and quiting")
+		return Config{}, err
 	}
 	defer f.Close()
 
@@ -51,7 +55,7 @@ func loadConfig() Config {
 	if jsonErr != nil {
 		log.Printf("%v\n", jsonErr)
 	}
-	return config
+	return config, nil
 }
 
 func saveDefaultConfig() Config {
