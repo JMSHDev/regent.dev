@@ -15,7 +15,7 @@ type Config struct {
 	RestartDelayMs   int
 }
 
-func LoadConfig() (Config, error) {
+func loadConfig() (Config, error) {
 	f, err := os.Open("config.json")
 	if err != nil {
 		//no valid config found - make a new one and return it
@@ -33,7 +33,7 @@ func LoadConfig() (Config, error) {
 	return config, nil
 }
 
-func SaveDefaultConfig() Config {
+func saveDefaultConfig() Config {
 	f, err := os.Create("config.json")
 	if err != nil {
 		log.Fatal(err)

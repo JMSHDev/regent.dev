@@ -10,9 +10,9 @@ import (
 )
 
 func main() {
-	config, err := LoadConfig()
+	config, err := loadConfig()
 	if err != nil {
-		SaveDefaultConfig()
+		saveDefaultConfig()
 		log.Fatal("Config not found - created default")
 	}
 
