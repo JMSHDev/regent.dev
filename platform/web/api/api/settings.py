@@ -27,11 +27,7 @@ SIMPLE_JWT_SIGNING_KEY = os.environ["SIMPLE_JWT_SIGNING_KEY"]
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = int(os.environ.get("DEBUG", default=0))
 
-ALLOWED_HOSTS = (
-    os.environ.get("DJANGO_ALLOWED_HOSTS").split(" ")
-    if os.environ.get("DJANGO_ALLOWED_HOSTS")
-    else []
-)
+ALLOWED_HOSTS = os.environ.get("DJANGO_ALLOWED_HOSTS").split(" ") if os.environ.get("DJANGO_ALLOWED_HOSTS") else []
 
 
 # Application definition
@@ -133,7 +129,12 @@ USE_TZ = True
 STATIC_URL = "/static/"
 STATIC_ROOT = BASE_DIR / "static"
 
-REST_FRAMEWORK = {"DEFAULT_AUTHENTICATION_CLASSES": ("rest_framework_simplejwt.authentication.JWTAuthentication",)}
+REST_FRAMEWORK = {
+    "DEFAULT_AUTHENTICATION_CLASSES": (
+        "rest_framework_simplejwt.authentication.JWTAuthentication",
+        "rest_framework.authentication.SessionAuthentication",
+    )
+}
 
 SIMPLE_JWT = {
     "ACCESS_TOKEN_LIFETIME": timedelta(minutes=60),
