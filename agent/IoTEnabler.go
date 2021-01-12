@@ -2,18 +2,21 @@ package main
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
 	"log"
 	"os"
 	"os/exec"
+	"time"
 )
 
 type Config struct {
 	PathToExecutable string
 	Arguments        string
 	AutoRestart      bool
+	RestartDelayMs   int
 }
 
 func main() {
@@ -25,8 +28,25 @@ func main() {
 
 	log.Printf("%v\n", config)
 
-	cmd := exec.Command(config.PathToExecutable, config.Arguments)
-	_, err = cmd.StdinPipe()
+	for {
+		LaunchProcess(config.PathToExecutable, config.Arguments)
+		if !config.AutoRestart {
+			fmt.Printf("Process completed...\n")
+			break
+		} else {
+			fmt.Printf("Process exited. Auto restarting\n")
+			time.Sleep(time.Duration(config.RestartDelayMs) * time.Millisecond)
+		}
+	}
+}
+
+func LaunchProcess(pathToExecutable string, arguments string) {
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+
+	cmd := exec.CommandContext(ctx, pathToExecutable, arguments)
+
+	_, err := cmd.StdinPipe()
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -71,6 +91,7 @@ func saveDefaultConfig() Config {
 		PathToExecutable: "fish",
 		Arguments:        "face",
 		AutoRestart:      true,
+		RestartDelayMs:   10000,
 	}
 	jsonValue, err := json.MarshalIndent(defaultConfig, "", "  ")
 	if err != nil {
