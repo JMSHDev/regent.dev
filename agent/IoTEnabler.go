@@ -2,24 +2,40 @@ package main
 
 import (
 	"bytes"
-	"encoding/json"
+	"context"
 	"fmt"
-	"io/ioutil"
 	"log"
-	"os"
 	"os/exec"
+	"time"
 )
 
-type Config struct {
-	PathToExecutable string
-	Arguments        string
-}
-
 func main() {
-	config := loadConfig()
+	config, err := loadConfig()
+	if err != nil {
+		saveDefaultConfig()
+		log.Fatal("Config not found - created default")
+	}
+
 	log.Printf("%v\n", config)
 
-	cmd := exec.Command(config.PathToExecutable, config.Arguments)
+	for {
+		LaunchProcess(config.PathToExecutable, config.Arguments)
+		if !config.AutoRestart {
+			fmt.Printf("Process completed...\n")
+			break
+		} else {
+			fmt.Printf("Process exited. Auto restarting\n")
+			time.Sleep(time.Duration(config.RestartDelayMs) * time.Millisecond)
+		}
+	}
+}
+
+func LaunchProcess(pathToExecutable string, arguments string) {
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+
+	cmd := exec.CommandContext(ctx, pathToExecutable, arguments)
+
 	_, err := cmd.StdinPipe()
 	if err != nil {
 		log.Fatal(err)
@@ -30,45 +46,8 @@ func main() {
 
 	err = cmd.Run()
 	if err != nil {
+		// was unable to run the program... probably should log & try again after a few seconds
 		log.Fatal(err)
 	}
 	fmt.Printf("%q\n", out.String())
-}
-
-func loadConfig() Config {
-	f, err := os.Open("config.json")
-	if err != nil {
-		//no valid config found - make a new one and return it
-		saveDefaultConfig()
-		log.Fatal("No config found - saving default and quiting")
-	}
-	defer f.Close()
-
-	data, _ := ioutil.ReadAll(f)
-
-	var config Config
-	jsonErr := json.Unmarshal(data, &config)
-	if jsonErr != nil {
-		log.Printf("%v\n", jsonErr)
-	}
-	return config
-}
-
-func saveDefaultConfig() Config {
-	f, err := os.Create("config.json")
-	if err != nil {
-		log.Fatal(err)
-	}
-	defer f.Close()
-
-	defaultConfig := Config{
-		PathToExecutable: "fish",
-		Arguments:        "face",
-	}
-	jsonValue, err := json.MarshalIndent(defaultConfig, "", "  ")
-	if err != nil {
-		fmt.Println("error:", err)
-	}
-	f.Write(jsonValue)
-	return defaultConfig
 }

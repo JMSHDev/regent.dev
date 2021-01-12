@@ -1,25 +1,14 @@
-# UBA
-Universal Business Adapter
+# IoTBiz
+A program which bootstraps an non-IoT device into an IoT enabled one!
 
-A program/service that accepts or makes a variety of connections, listens and sends data on to other connections.
-For example, UDP to HTTP, or MQTT to HTTP, or TCP to Database!
-
-Must be abe to be configured by the user to operate on desired protocols, ports etc.
-Must be easily configured to filter when/what to send on, and where to.
-Must be reliable and low-footprint.
+A simple program on the device acts as an agent, running the main application(s) that it requires.
+The agent program monitors the system processes, allowing them to be remotely administered using a remote server.
 
 ## Use case
 As a developer, 
-I want to have a quick drop-in solution 
-that I can use to connect a product that communicates using protocol X 
-to a service that communicates using protocol Y, 
-so that I don't have to worry about relying low-level protocol code.
+I want to have a quick drop-in solution
+that I can use to build devices so that I can remotely monitor, administer and reliably upgrade them 
+so that I can quickly make working IoT devices or platforms for rapid deployment. 
 
-Should be open-source (GPL 3?) with commercial license option(s), to allow try-before-you-buy
-
-## How to commercialise?
-* paid commercial OEM license for on-device
-* paid commercial license for website
-* paid hosted option?
-* paid more advanced configuration/extensibility/logging?
-
+## Requirements
+Agent code r
