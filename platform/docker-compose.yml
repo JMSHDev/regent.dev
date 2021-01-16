@@ -25,6 +25,8 @@ services:
       - postgres_data:/var/lib/postgresql/data/
     env_file:
       - .db.env.dev
+  mqtt:
+    image: eclipse-mosquitto:2.0.5
 volumes:
   static_volume:
   postgres_data:
