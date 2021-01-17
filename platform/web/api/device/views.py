@@ -21,7 +21,9 @@ class DeviceViewSet(ModelViewSet):
     def register(self, request, *args, **kwargs):
         serializer = RegisterDeviceSerializer(data=request.data)
         if serializer.is_valid():
-            return Response(serializer.data, HTTP_201_CREATED)
+            device = Device(name=serializer.data["customer_id"] + "_" + serializer.data["device_id"])
+            device.save()
+            return Response(DeviceSerializer(device, context={"request": request}).data, HTTP_201_CREATED)
         else:
             return Response(serializer.errors, HTTP_400_BAD_REQUEST)
 

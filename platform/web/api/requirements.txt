@@ -6,3 +6,4 @@ djangorestframework-simplejwt
 markdown
 psycopg2-binary
 daphne
+requests

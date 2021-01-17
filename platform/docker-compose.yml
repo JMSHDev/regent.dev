@@ -25,8 +25,16 @@ services:
       - postgres_data:/var/lib/postgresql/data/
     env_file:
       - .db.env.dev
+  mqtt_bridge:
+    build: ./mqtt_bridge
+    env_file:
+      - .mqtt_bridge.env.dev
+    depends_on:
+      - mqtt
   mqtt:
     image: eclipse-mosquitto:2.0.5
+    volumes:
+      - ./mosquitto/mosquitto.conf:/mosquitto/config/mosquitto.conf
 volumes:
   static_volume:
   postgres_data:
