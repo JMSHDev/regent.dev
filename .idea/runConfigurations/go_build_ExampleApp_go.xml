@@ -1,0 +1,12 @@
+<component name="ProjectRunConfigurationManager">
+  <configuration default="false" name="go build ExampleApp.go" type="GoApplicationRunConfiguration" factoryName="Go Application" nameIsGenerated="true">
+    <module name="UBA" />
+    <working_directory value="$PROJECT_DIR$/bin/" />
+    <parameters value="fish" />
+    <kind value="DIRECTORY" />
+    <filePath value="$PROJECT_DIR$/example_app/ExampleApp.go" />
+    <directory value="$PROJECT_DIR$/example_app" />
+    <output_directory value="$PROJECT_DIR$/bin/" />
+    <method v="2" />
+  </configuration>
+</component>

@@ -1,9 +1,10 @@
 package main
 
 import (
-	"bytes"
+	"bufio"
 	"context"
 	"fmt"
+	"io"
 	"log"
 	"os/exec"
 	"time"
@@ -41,13 +42,42 @@ func LaunchProcess(pathToExecutable string, arguments string) {
 		log.Fatal(err)
 	}
 
-	var out bytes.Buffer
-	cmd.Stdout = &out
-
-	err = cmd.Run()
+	out, err := cmd.StdoutPipe()
 	if err != nil {
-		// was unable to run the program... probably should log & try again after a few seconds
 		log.Fatal(err)
 	}
-	fmt.Printf("%q\n", out.String())
+
+	ch := make(chan error)
+	go func() {
+		ch <- cmd.Run()
+	}()
+
+	//err = cmd.Start()
+	//if err != nil {
+	//	// was unable to run the program... probably should log & try again after a few seconds
+	//	log.Fatal(err)
+	//}
+
+	buf := bufio.NewReader(out) // Notice that this is not in a loop
+	var currentLine []byte
+
+	for {
+		select {
+		case err = <-ch:
+			return
+		default:
+		}
+
+		bytes, err := buf.ReadBytes('\n')
+		if err == io.EOF {
+			currentLine = append(currentLine, bytes...)
+		} else if err != nil {
+			break // some othr nasty error
+		} else {
+			currentLine = append(currentLine, bytes...)
+			print(string(currentLine))
+			currentLine = []byte{}
+		}
+
+	}
 }
