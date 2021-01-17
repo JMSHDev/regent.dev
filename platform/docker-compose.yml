@@ -35,6 +35,8 @@ services:
     image: eclipse-mosquitto:2.0.5
     volumes:
       - ./mosquitto/mosquitto.conf:/mosquitto/config/mosquitto.conf
+    ports:
+      - 1883:1883
 volumes:
   static_volume:
   postgres_data:
