@@ -52,11 +52,12 @@ func LaunchProcess(pathToExecutable string, arguments string) {
 		ch <- cmd.Run()
 	}()
 
-	//err = cmd.Start()
-	//if err != nil {
-	//	// was unable to run the program... probably should log & try again after a few seconds
-	//	log.Fatal(err)
-	//}
+	servers := []MQTTServerDetails{{
+		address:  "localhost:1883",
+		username: "",
+		password: "",
+	}}
+	LaunchMqttServers(servers)
 
 	buf := bufio.NewReader(out) // Notice that this is not in a loop
 	var currentLine []byte

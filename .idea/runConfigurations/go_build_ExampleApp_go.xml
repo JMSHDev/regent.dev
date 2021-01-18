@@ -1,6 +1,6 @@
 <component name="ProjectRunConfigurationManager">
   <configuration default="false" name="go build ExampleApp.go" type="GoApplicationRunConfiguration" factoryName="Go Application" nameIsGenerated="true">
-    <module name="IoTbiz" />
+    <module name="UBA" />
     <working_directory value="$PROJECT_DIR$/bin" />
     <kind value="FILE" />
     <filePath value="$PROJECT_DIR$/example_app/ExampleApp.go" />
