@@ -2,7 +2,7 @@
 <project version="4">
   <component name="ProjectModuleManager">
     <modules>
-      <module fileurl="file://$PROJECT_DIR$/.idea/UBA.iml" filepath="$PROJECT_DIR$/.idea/UBA.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/IoTbiz.iml" filepath="$PROJECT_DIR$/.idea/IoTbiz.iml" />
     </modules>
   </component>
 </project>

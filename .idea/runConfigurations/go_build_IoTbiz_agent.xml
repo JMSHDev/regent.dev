@@ -1,6 +1,6 @@
 <component name="ProjectRunConfigurationManager">
   <configuration default="false" name="go build IoTbiz/agent" type="GoApplicationRunConfiguration" factoryName="Go Application" nameIsGenerated="true">
-    <module name="UBA" />
+    <module name="IoTbiz" />
     <working_directory value="$PROJECT_DIR$/bin/" />
     <kind value="PACKAGE" />
     <filePath value="$PROJECT_DIR$/agent/IoTEnabler.go" />
