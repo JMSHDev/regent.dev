@@ -13,6 +13,7 @@ type Config struct {
 	Arguments        string
 	AutoRestart      bool
 	RestartDelayMs   int
+	DeviceID         string
 }
 
 func loadConfig() (Config, error) {
@@ -41,10 +42,11 @@ func saveDefaultConfig() Config {
 	defer f.Close()
 
 	defaultConfig := Config{
-		PathToExecutable: "fish",
-		Arguments:        "face",
+		PathToExecutable: "program.exe",
+		Arguments:        "",
 		AutoRestart:      true,
 		RestartDelayMs:   10000,
+		DeviceID:         "deviceID",
 	}
 	jsonValue, err := json.MarshalIndent(defaultConfig, "", "  ")
 	if err != nil {

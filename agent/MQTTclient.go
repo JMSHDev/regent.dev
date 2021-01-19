@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	mqtt "github.com/eclipse/paho.mqtt.golang"
 	"log"
 	"os"
@@ -16,26 +17,33 @@ type MQTTServerDetails struct {
 	password string
 }
 
-func LaunchMqttServers(mqttServers []MQTTServerDetails) {
+func LaunchMqttServers(mqttServers []MQTTServerDetails, deviceID string) {
 	var waitGroup sync.WaitGroup
 	for _, s := range mqttServers {
 		waitGroup.Add(1)
-		go subscribeToMqttServer(s, &waitGroup)
+		go subscribeToMqttServer(s, &waitGroup, deviceID)
 	}
-	waitGroup.Wait()
+	//waitGroup.Wait()
 }
 
-func subscribeToMqttServer(mqttServer MQTTServerDetails, waitGroup *sync.WaitGroup) {
+func subscribeToMqttServer(mqttServer MQTTServerDetails, waitGroup *sync.WaitGroup, deviceID string) {
 	defer waitGroup.Done()
 	log.Printf("Connecting to MQTT Server %s", mqttServer.address)
 
-	var mqttMessageHandler mqtt.MessageHandler = func(client mqtt.Client, msg mqtt.Message) {
+	var mqttCommandHandler mqtt.MessageHandler = func(client mqtt.Client, msg mqtt.Message) {
 		print(string(msg.Payload()))
 	}
 
 	var mqttConnectHandler mqtt.OnConnectHandler = func(client mqtt.Client) {
 		log.Printf("Connected to mqtt server %s", mqttServer.address)
-		if token := client.Subscribe("IoTEnabler/#", 0, mqttMessageHandler); token.Wait() && token.Error() != nil {
+
+		// register to receive commands
+		if token := client.Subscribe(fmt.Sprintf("devices/%v/command", deviceID), 2, mqttCommandHandler); token.Wait() && token.Error() != nil {
+			log.Fatal(token.Error())
+		}
+
+		// announce that I'm online
+		if token := client.Publish(fmt.Sprintf("devices/%v/status", deviceID), 2, true, "Online"); token.Wait() && token.Error() != nil {
 			log.Fatal(token.Error())
 		}
 	}
@@ -52,6 +60,7 @@ func subscribeToMqttServer(mqttServer MQTTServerDetails, waitGroup *sync.WaitGro
 	opts.SetUsername(mqttServer.username)
 	opts.SetPassword(mqttServer.password)
 	opts.SetMaxReconnectInterval(5 * time.Second)
+	opts.SetWill(fmt.Sprintf("devices/%v/status", deviceID), "Offline", 2, true)
 
 	sigs := make(chan os.Signal, 1)
 	signal.Notify(sigs, syscall.SIGINT, syscall.SIGTERM)
@@ -71,7 +80,7 @@ func subscribeToMqttServer(mqttServer MQTTServerDetails, waitGroup *sync.WaitGro
 			time.Sleep(1 * time.Second)
 			continue
 		} else {
-			runUntilExit(c, sigs)
+			runUntilExit(c, sigs, deviceID)
 			break
 		}
 	}
@@ -79,7 +88,7 @@ func subscribeToMqttServer(mqttServer MQTTServerDetails, waitGroup *sync.WaitGro
 	time.Sleep(1 * time.Second)
 }
 
-func runUntilExit(c mqtt.Client, sigs chan os.Signal) {
+func runUntilExit(c mqtt.Client, sigs chan os.Signal, deviceID string) {
 	defer c.Disconnect(250)
 
 	// wait for exit
@@ -87,8 +96,11 @@ func runUntilExit(c mqtt.Client, sigs chan os.Signal) {
 	log.Print("Exit signal received")
 	log.Print(sig)
 
-	// unsubscribe and disconnect
-	if token := c.Unsubscribe("IoTEnabler/#"); token.Wait() && token.Error() != nil {
+	// unsubscribe and update status
+	if token := c.Unsubscribe(fmt.Sprintf("devices/%v/command", deviceID)); token.Wait() && token.Error() != nil {
+		log.Fatal(token.Error())
+	}
+	if token := c.Publish(fmt.Sprintf("devices/%v/status", deviceID), 2, true, "Offline"); token.Wait() && token.Error() != nil {
 		log.Fatal(token.Error())
 	}
 }

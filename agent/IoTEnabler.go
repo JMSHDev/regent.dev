@@ -19,6 +19,13 @@ func main() {
 
 	log.Printf("%v\n", config)
 
+	servers := []MQTTServerDetails{{
+		address:  "localhost:1883",
+		username: "",
+		password: "",
+	}}
+	LaunchMqttServers(servers, config.DeviceID)
+
 	for {
 		LaunchProcess(config.PathToExecutable, config.Arguments)
 		if !config.AutoRestart {
@@ -51,13 +58,6 @@ func LaunchProcess(pathToExecutable string, arguments string) {
 	go func() {
 		ch <- cmd.Run()
 	}()
-
-	servers := []MQTTServerDetails{{
-		address:  "localhost:1883",
-		username: "",
-		password: "",
-	}}
-	LaunchMqttServers(servers)
 
 	buf := bufio.NewReader(out) // Notice that this is not in a loop
 	var currentLine []byte

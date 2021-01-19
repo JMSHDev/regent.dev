@@ -2,5 +2,6 @@
   "PathToExecutable": "go_build_ExampleApp_go.exe",
   "Arguments": "foo",
   "AutoRestart": true,
-  "RestartDelayMs": 10000
+  "RestartDelayMs": 10000,
+  "DeviceID": "stuTest"
 }
