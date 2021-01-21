@@ -6,3 +6,4 @@ class Device(models.Model):
     status = models.CharField(max_length=10, default="offline")
     last_updated = models.DateTimeField(auto_now=True)
     activated = models.BooleanField(default=False)
+    password = models.CharField(max_length=50)

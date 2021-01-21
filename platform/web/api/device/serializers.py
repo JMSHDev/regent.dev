@@ -6,7 +6,7 @@ from device.models import Device
 class DeviceSerializer(serializers.HyperlinkedModelSerializer):
     class Meta:
         model = Device
-        fields = ["url", "name", "status", "last_updated", "activated"]
+        fields = ["url", "password", "name", "status", "last_updated", "activated"]
 
 
 class RegisterDeviceSerializer(serializers.Serializer):

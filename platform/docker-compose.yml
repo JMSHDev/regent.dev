@@ -41,6 +41,8 @@ services:
       - 8883:8883
     expose:
       - 1883
+    depends_on:
+      - db
 volumes:
   static_volume:
   postgres_data:
