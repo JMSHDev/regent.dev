@@ -6,7 +6,11 @@ import (
 	"fmt"
 	"io"
 	"log"
+	"os"
 	"os/exec"
+	"os/signal"
+	"sync"
+	"syscall"
 	"time"
 )
 
@@ -19,26 +23,64 @@ func main() {
 
 	log.Printf("%v\n", config)
 
-	servers := []MQTTServerDetails{{
+	mqttServer := MQTTServerDetails{
 		address:  "localhost:1883",
 		username: "",
 		password: "",
-	}}
-	LaunchMqttServers(servers, config.DeviceID)
-
-	for {
-		LaunchProcess(config.PathToExecutable, config.Arguments)
-		if !config.AutoRestart {
-			fmt.Printf("Process completed...\n")
-			break
-		} else {
-			fmt.Printf("Process exited. Auto restarting\n")
-			time.Sleep(time.Duration(config.RestartDelayMs) * time.Millisecond)
-		}
 	}
+
+	mqttMessages := make(chan string)
+	processMessages := make(chan string)
+	var waitGroup sync.WaitGroup // wait for everything to finish so can safely shutdown
+
+	go subscribeToMqttServer(mqttServer, &waitGroup, config.DeviceID, mqttMessages)
+	go launchProcess(config.PathToExecutable, config.Arguments, processMessages, config.AutoRestart, config.RestartDelayMs, &waitGroup)
+
+	sigs := make(chan os.Signal, 1)
+	signal.Notify(sigs, syscall.SIGINT, syscall.SIGTERM)
+
+	go func() {
+		for {
+			// check to see if we need to quit
+			select {
+			case sig := <-sigs:
+				log.Print("Exit signal received\n")
+				log.Print(sig)
+				mqttMessages <- "shutdown"
+				processMessages <- "shutdown"
+				break
+			default:
+			}
+		}
+	}()
+
+	print("Waiting for completion\n")
+	waitGroup.Wait()
+	print("done\n")
 }
 
-func LaunchProcess(pathToExecutable string, arguments string) {
+func launchProcess(pathToExecutable string, arguments string, messages chan string, autoRestart bool, restartDelayMs int, waitGroup *sync.WaitGroup) {
+	go func() {
+		waitGroup.Add(1)
+		defer waitGroup.Done()
+
+		for {
+			exitNow := launchProcessAux(pathToExecutable, arguments, messages)
+			if exitNow {
+				break
+			}
+			if !autoRestart {
+				fmt.Printf("Process completed...\n")
+				break
+			} else {
+				fmt.Printf("Process exited. Auto restarting\n")
+				time.Sleep(time.Duration(restartDelayMs) * time.Millisecond)
+			}
+		}
+	}()
+}
+
+func launchProcessAux(pathToExecutable string, arguments string, messages chan string) bool {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
@@ -65,7 +107,16 @@ func LaunchProcess(pathToExecutable string, arguments string) {
 	for {
 		select {
 		case err = <-ch:
-			return
+			return false
+		default:
+		}
+
+		select {
+		case command := <-messages:
+			if command == "shutdown" {
+				print("shutdown process now\n")
+				return true
+			}
 		default:
 		}
 
@@ -73,12 +124,12 @@ func LaunchProcess(pathToExecutable string, arguments string) {
 		if err == io.EOF {
 			currentLine = append(currentLine, bytes...)
 		} else if err != nil {
-			break // some othr nasty error
+			break // some other nasty error
 		} else {
 			currentLine = append(currentLine, bytes...)
 			print(string(currentLine))
 			currentLine = []byte{}
 		}
-
 	}
+	return false
 }
