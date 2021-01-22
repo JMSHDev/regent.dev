@@ -32,11 +32,17 @@ services:
     depends_on:
       - mqtt
   mqtt:
-    image: eclipse-mosquitto:2.0.5
+    build: ./emqx
     volumes:
-      - ./mosquitto/mosquitto.conf:/mosquitto/config/mosquitto.conf
+      - ./emqx/tls/ca.crt:/opt/emqx/etc/certs/ca.crt
+      - ./emqx/tls/server.crt:/opt/emqx/etc/certs/server.crt
+      - ./emqx/tls/server.key:/opt/emqx/etc/certs/server.key
     ports:
-      - 1883:1883
+      - 8883:8883
+    expose:
+      - 1883
+    depends_on:
+      - db
 volumes:
   static_volume:
   postgres_data:

@@ -5,6 +5,7 @@ import requests
 
 REST_URL_BASE = os.environ["REST_URL_BASE"]
 MQTT_HOST = os.environ["MQTT_HOST"]
+PSWD = os.environ["MQTT_BRIDGE_PSWD"]
 
 
 def on_connect(client, userdata, flags, rc, props):
@@ -21,6 +22,7 @@ def on_message(client, userdata, msg):
 
 def main():
     client = mqtt.Client(client_id="mqtt_test", protocol=mqtt.MQTTv5)
+    client.username_pw_set("mqtt_bridge", PSWD)
     client.on_message = on_message
     client.on_connect = on_connect
     client.connect(host=MQTT_HOST, clean_start=False)
