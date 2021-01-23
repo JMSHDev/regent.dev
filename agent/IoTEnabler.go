@@ -34,7 +34,7 @@ func main() {
 	var waitGroup sync.WaitGroup // wait for everything to finish so can safely shutdown
 
 	go subscribeToMqttServer(mqttServer, &waitGroup, config.DeviceID, mqttMessages)
-	go launchProcess(config.PathToExecutable, config.Arguments, processMessages, config.AutoRestart, config.RestartDelayMs, &waitGroup)
+	launchProcess(config.PathToExecutable, config.Arguments, processMessages, mqttMessages, config.AutoRestart, config.RestartDelayMs, &waitGroup)
 
 	sigs := make(chan os.Signal, 1)
 	signal.Notify(sigs, syscall.SIGINT, syscall.SIGTERM)
@@ -59,13 +59,13 @@ func main() {
 	print("done\n")
 }
 
-func launchProcess(pathToExecutable string, arguments string, messages chan string, autoRestart bool, restartDelayMs int, waitGroup *sync.WaitGroup) {
+func launchProcess(pathToExecutable string, arguments string, inputMessages chan string, outputMessages chan string, autoRestart bool, restartDelayMs int, waitGroup *sync.WaitGroup) {
+	waitGroup.Add(1)
 	go func() {
-		waitGroup.Add(1)
 		defer waitGroup.Done()
 
 		for {
-			exitNow := launchProcessAux(pathToExecutable, arguments, messages)
+			exitNow := launchProcessAux(pathToExecutable, arguments, inputMessages, outputMessages)
 			if exitNow {
 				break
 			}
@@ -80,7 +80,7 @@ func launchProcess(pathToExecutable string, arguments string, messages chan stri
 	}()
 }
 
-func launchProcessAux(pathToExecutable string, arguments string, messages chan string) bool {
+func launchProcessAux(pathToExecutable string, arguments string, inputMessages chan string, outputMessages chan string) bool {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
@@ -98,7 +98,9 @@ func launchProcessAux(pathToExecutable string, arguments string, messages chan s
 
 	ch := make(chan error)
 	go func() {
+		outputMessages <- "start"
 		ch <- cmd.Run()
+		outputMessages <- "stop"
 	}()
 
 	buf := bufio.NewReader(out) // Notice that this is not in a loop
@@ -112,7 +114,7 @@ func launchProcessAux(pathToExecutable string, arguments string, messages chan s
 		}
 
 		select {
-		case command := <-messages:
+		case command := <-inputMessages:
 			if command == "shutdown" {
 				print("shutdown process now\n")
 				return true

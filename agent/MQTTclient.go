@@ -15,12 +15,12 @@ type MQTTServerDetails struct {
 }
 
 func subscribeToMqttServer(mqttServer MQTTServerDetails, waitGroup *sync.WaitGroup, deviceID string, messages chan string) {
-	waitGroup.Add(1)
+	waitGroup.Add(1) // for the mqtt
 	defer waitGroup.Done()
 	log.Printf("Connecting to MQTT Server %s", mqttServer.address)
 
 	var mqttCommandHandler mqtt.MessageHandler = func(client mqtt.Client, msg mqtt.Message) {
-		print(string(msg.Payload()))
+		println(string(msg.Payload()))
 	}
 
 	var mqttConnectHandler mqtt.OnConnectHandler = func(client mqtt.Client) {
@@ -63,8 +63,6 @@ func subscribeToMqttServer(mqttServer MQTTServerDetails, waitGroup *sync.WaitGro
 			break
 		}
 	}
-
-	time.Sleep(1 * time.Second)
 }
 
 func clockMQTT(c mqtt.Client, deviceID string, messages chan string) {
@@ -78,6 +76,10 @@ func clockMQTT(c mqtt.Client, deviceID string, messages chan string) {
 				if m == "shutdown" {
 					loop = false
 					print("got shutdown message\n")
+				} else if m == "start" {
+					c.Publish(fmt.Sprintf("devices/%v/start", deviceID), 2, true, "Process started at: "+time.Now().String())
+				} else if m == "stop" {
+					c.Publish(fmt.Sprintf("devices/%v/stop", deviceID), 2, true, "Process stopped at: "+time.Now().String())
 				}
 			}
 		}
