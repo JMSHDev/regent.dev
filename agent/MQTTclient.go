@@ -4,10 +4,7 @@ import (
 	"fmt"
 	mqtt "github.com/eclipse/paho.mqtt.golang"
 	"log"
-	"os"
-	"os/signal"
 	"sync"
-	"syscall"
 	"time"
 )
 
@@ -17,21 +14,13 @@ type MQTTServerDetails struct {
 	password string
 }
 
-func LaunchMqttServers(mqttServers []MQTTServerDetails, deviceID string) {
-	var waitGroup sync.WaitGroup
-	for _, s := range mqttServers {
-		waitGroup.Add(1)
-		go subscribeToMqttServer(s, &waitGroup, deviceID)
-	}
-	//waitGroup.Wait()
-}
-
-func subscribeToMqttServer(mqttServer MQTTServerDetails, waitGroup *sync.WaitGroup, deviceID string) {
+func subscribeToMqttServer(mqttServer MQTTServerDetails, waitGroup *sync.WaitGroup, deviceID string, messages chan string) {
+	waitGroup.Add(1) // for the mqtt
 	defer waitGroup.Done()
 	log.Printf("Connecting to MQTT Server %s", mqttServer.address)
 
 	var mqttCommandHandler mqtt.MessageHandler = func(client mqtt.Client, msg mqtt.Message) {
-		print(string(msg.Payload()))
+		println(string(msg.Payload()))
 	}
 
 	var mqttConnectHandler mqtt.OnConnectHandler = func(client mqtt.Client) {
@@ -62,39 +51,39 @@ func subscribeToMqttServer(mqttServer MQTTServerDetails, waitGroup *sync.WaitGro
 	opts.SetMaxReconnectInterval(5 * time.Second)
 	opts.SetWill(fmt.Sprintf("devices/%v/status", deviceID), "Offline", 2, true)
 
-	sigs := make(chan os.Signal, 1)
-	signal.Notify(sigs, syscall.SIGINT, syscall.SIGTERM)
-
+	// create a client and then clock it until we need to stop
 	for {
-		// check to see if we need to quit
-		select {
-		case sig := <-sigs:
-			log.Print("Exit signal received")
-			log.Print(sig)
-			break
-		default:
-		}
 		c := mqtt.NewClient(opts)
 		if token := c.Connect(); token.Wait() && token.Error() != nil {
-			// fail to connect, have another go in a bit
+			// fail to connect, have another go in a bit ... TODO: handle quit here
 			time.Sleep(1 * time.Second)
 			continue
 		} else {
-			runUntilExit(c, sigs, deviceID)
+			clockMQTT(c, deviceID, messages)
 			break
 		}
 	}
-
-	time.Sleep(1 * time.Second)
 }
 
-func runUntilExit(c mqtt.Client, sigs chan os.Signal, deviceID string) {
+func clockMQTT(c mqtt.Client, deviceID string, messages chan string) {
 	defer c.Disconnect(250)
 
-	// wait for exit
-	sig := <-sigs
-	log.Print("Exit signal received")
-	log.Print(sig)
+	loop := true
+	for loop {
+		select {
+		case m := <-messages:
+			{
+				if m == "shutdown" {
+					loop = false
+					print("got shutdown message\n")
+				} else if m == "start" {
+					c.Publish(fmt.Sprintf("devices/%v/start", deviceID), 2, true, "Process started at: "+time.Now().String())
+				} else if m == "stop" {
+					c.Publish(fmt.Sprintf("devices/%v/stop", deviceID), 2, true, "Process stopped at: "+time.Now().String())
+				}
+			}
+		}
+	}
 
 	// unsubscribe and update status
 	if token := c.Unsubscribe(fmt.Sprintf("devices/%v/command", deviceID)); token.Wait() && token.Error() != nil {
