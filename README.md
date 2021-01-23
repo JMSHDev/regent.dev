@@ -45,7 +45,7 @@ idempotent).
 
 The reason behind having customer number is to limit the number of devices that can be registered. After reaching the
 limit the api will not be able to do anything until the limit is increased. The MAC address is necessary because each
-device has to have a unique name. In this case the name will be {customer_number}_{mac_address}.
+device has to have a unique name. In this case the name will be {customer_number}/{mac_address}.
 
 The reason for disabling registration api for particular MAC address once it is registered and activated is to prevent
 ability to re-register a device by attacker that knows MAC address and customer number. That would enable the

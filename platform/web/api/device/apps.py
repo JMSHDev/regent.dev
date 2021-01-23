@@ -1,5 +1,5 @@
 from django.apps import AppConfig
 
 
-class ApiConfig(AppConfig):
+class DeviceConfig(AppConfig):
     name = "device"

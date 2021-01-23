@@ -1,15 +1,13 @@
-from django.core.exceptions import ObjectDoesNotExist
-
+from rest_framework.decorators import action
 from rest_framework.viewsets import GenericViewSet, ModelViewSet
 from rest_framework.mixins import ListModelMixin
 from rest_framework.response import Response
-from rest_framework.status import HTTP_200_OK, HTTP_400_BAD_REQUEST, HTTP_201_CREATED, HTTP_404_NOT_FOUND
+from rest_framework.status import HTTP_200_OK, HTTP_400_BAD_REQUEST, HTTP_201_CREATED, HTTP_403_FORBIDDEN
 from rest_framework.permissions import IsAuthenticated, AllowAny
-from rest_framework.decorators import action
-from rest_framework.views import APIView
 
-from device.serializers import DeviceSerializer, RegisterDeviceSerializer, UpdateDeviceSerializer
+from device.serializers import DeviceSerializer, RegisterDeviceSerializer, ActivateDeviceSerializer
 from device.models import Device
+from device.services.registration import register, activate
 
 
 class DeviceViewSet(ModelViewSet):
@@ -21,11 +19,29 @@ class DeviceViewSet(ModelViewSet):
     def register(self, request, *args, **kwargs):
         serializer = RegisterDeviceSerializer(data=request.data)
         if serializer.is_valid():
-            device = Device(name=serializer.data["customer_id"] + "_" + serializer.data["device_id"])
-            device.save()
-            return Response(DeviceSerializer(device, context={"request": request}).data, HTTP_201_CREATED)
-        else:
-            return Response(serializer.errors, HTTP_400_BAD_REQUEST)
+            try:
+                reg_result = register(serializer.data["customer_id"], serializer.data["device_id"])
+                if reg_result["success"]:
+                    return Response(reg_result["content"], HTTP_201_CREATED)
+                else:
+                    return Response(reg_result["content"], HTTP_403_FORBIDDEN)
+            except Exception as exp:
+                return Response(serializer.errors, HTTP_400_BAD_REQUEST)
+
+    @action(detail=False, permission_classes=[AllowAny], methods=["post"], serializer_class=ActivateDeviceSerializer)
+    def post(self, request, *args, **kwargs):
+        serializer = ActivateDeviceSerializer(data=request.data)
+        if serializer.is_valid():
+            try:
+                act_result = activate(
+                    serializer.data["customer_id"], serializer.data["device_id"], serializer.data["password"]
+                )
+                if act_result["success"]:
+                    return Response(act_result["content"], HTTP_201_CREATED)
+                else:
+                    return Response(act_result["content"], HTTP_403_FORBIDDEN)
+            except Exception as exp:
+                return Response(serializer.errors, HTTP_400_BAD_REQUEST)
 
 
 class PingViewSet(GenericViewSet, ListModelMixin):
@@ -33,21 +49,3 @@ class PingViewSet(GenericViewSet, ListModelMixin):
 
     def list(self, request, *args, **kwargs):
         return Response(data={"id": request.GET.get("id")}, status=HTTP_200_OK)
-
-
-class UpdateDeviceState(APIView):
-    permission_classes = [AllowAny]
-
-    def put(self, request, name, format=None):
-        serializer = UpdateDeviceSerializer(data=request.data)
-        if serializer.is_valid():
-            try:
-                device = Device.objects.get(name=name)
-                device.status = serializer.data["status"]
-                device.activated = True
-                device.save()
-                return Response(DeviceSerializer(device, context={"request": request}).data)
-            except ObjectDoesNotExist:
-                return Response("Device not found.", HTTP_404_NOT_FOUND)
-        else:
-            return Response(serializer.errors, HTTP_400_BAD_REQUEST)
