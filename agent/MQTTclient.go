@@ -14,7 +14,19 @@ type MQTTServerDetails struct {
 	password string
 }
 
-func subscribeToMqttServer(mqttServer MQTTServerDetails, waitGroup *sync.WaitGroup, deviceID string, messages chan string) {
+type MQTTMessage struct {
+	MessageType int
+	data        string
+}
+
+const (
+	SHUTDOWN = iota
+	START    = iota
+	STOP     = iota
+	STDOUT   = iota
+)
+
+func subscribeToMqttServer(mqttServer MQTTServerDetails, waitGroup *sync.WaitGroup, deviceID string, messages chan MQTTMessage) {
 	waitGroup.Add(1) // for the mqtt
 	defer waitGroup.Done()
 	log.Printf("Connecting to MQTT Server %s", mqttServer.address)
@@ -65,7 +77,7 @@ func subscribeToMqttServer(mqttServer MQTTServerDetails, waitGroup *sync.WaitGro
 	}
 }
 
-func clockMQTT(c mqtt.Client, deviceID string, messages chan string) {
+func clockMQTT(c mqtt.Client, deviceID string, messages chan MQTTMessage) {
 	defer c.Disconnect(250)
 
 	loop := true
@@ -73,13 +85,16 @@ func clockMQTT(c mqtt.Client, deviceID string, messages chan string) {
 		select {
 		case m := <-messages:
 			{
-				if m == "shutdown" {
+				switch m.MessageType {
+				case SHUTDOWN:
 					loop = false
 					print("got shutdown message\n")
-				} else if m == "start" {
+				case START:
 					c.Publish(fmt.Sprintf("devices/%v/start", deviceID), 2, true, "Process started at: "+time.Now().String())
-				} else if m == "stop" {
+				case STOP:
 					c.Publish(fmt.Sprintf("devices/%v/stop", deviceID), 2, true, "Process stopped at: "+time.Now().String())
+				case STDOUT:
+					c.Publish(fmt.Sprintf("devices/%v/stdout", deviceID), 2, false, m.data)
 				}
 			}
 		}
