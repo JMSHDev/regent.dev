@@ -29,7 +29,7 @@ func main() {
 		password: "",
 	}
 
-	mqttMessages := make(chan string)
+	mqttMessages := make(chan MQTTMessage)
 	processMessages := make(chan string)
 	var waitGroup sync.WaitGroup // wait for everything to finish so can safely shutdown
 
@@ -46,7 +46,7 @@ func main() {
 			case sig := <-sigs:
 				log.Print("Exit signal received\n")
 				log.Print(sig)
-				mqttMessages <- "shutdown"
+				mqttMessages <- MQTTMessage{SHUTDOWN, ""}
 				processMessages <- "shutdown"
 				break
 			default:
@@ -59,13 +59,13 @@ func main() {
 	print("done\n")
 }
 
-func launchProcess(pathToExecutable string, arguments string, inputMessages chan string, outputMessages chan string, autoRestart bool, restartDelayMs int, waitGroup *sync.WaitGroup) {
+func launchProcess(pathToExecutable string, arguments string, inputMessages chan string, mqttMessages chan MQTTMessage, autoRestart bool, restartDelayMs int, waitGroup *sync.WaitGroup) {
 	waitGroup.Add(1)
 	go func() {
 		defer waitGroup.Done()
 
 		for {
-			exitNow := launchProcessAux(pathToExecutable, arguments, inputMessages, outputMessages)
+			exitNow := launchProcessAux(pathToExecutable, arguments, inputMessages, mqttMessages)
 			if exitNow {
 				break
 			}
@@ -80,7 +80,7 @@ func launchProcess(pathToExecutable string, arguments string, inputMessages chan
 	}()
 }
 
-func launchProcessAux(pathToExecutable string, arguments string, inputMessages chan string, outputMessages chan string) bool {
+func launchProcessAux(pathToExecutable string, arguments string, inputMessages chan string, mqttMessages chan MQTTMessage) bool {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
@@ -98,9 +98,10 @@ func launchProcessAux(pathToExecutable string, arguments string, inputMessages c
 
 	ch := make(chan error)
 	go func() {
-		outputMessages <- "start"
-		ch <- cmd.Run()
-		outputMessages <- "stop"
+		mqttMessages <- MQTTMessage{START, ""}
+		runResult := cmd.Run()
+		mqttMessages <- MQTTMessage{STOP, ""}
+		ch <- runResult
 	}()
 
 	buf := bufio.NewReader(out) // Notice that this is not in a loop
@@ -110,10 +111,6 @@ func launchProcessAux(pathToExecutable string, arguments string, inputMessages c
 		select {
 		case err = <-ch:
 			return false
-		default:
-		}
-
-		select {
 		case command := <-inputMessages:
 			if command == "shutdown" {
 				print("shutdown process now\n")
@@ -130,6 +127,7 @@ func launchProcessAux(pathToExecutable string, arguments string, inputMessages c
 		} else {
 			currentLine = append(currentLine, bytes...)
 			print(string(currentLine))
+			mqttMessages <- MQTTMessage{STDOUT, string(currentLine)}
 			currentLine = []byte{}
 		}
 	}
