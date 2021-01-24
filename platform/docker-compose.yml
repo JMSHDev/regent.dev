@@ -25,6 +25,8 @@ services:
       - postgres_data:/var/lib/postgresql/data/
     env_file:
       - .db.env.dev
+    ports:
+      - 5433:5432 # For debugging only
   mqtt_bridge:
     build: ./mqtt_bridge
     env_file:
@@ -43,6 +45,8 @@ services:
       - 1883
     depends_on:
       - db
+    env_file:
+      - .emqx.env.dev
 volumes:
   static_volume:
   postgres_data:

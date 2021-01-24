@@ -7,7 +7,7 @@ from rest_framework.permissions import IsAuthenticated, AllowAny
 
 from device.serializers import DeviceSerializer, RegisterDeviceSerializer, ActivateDeviceSerializer
 from device.models import Device
-from device.services.registration import register, activate
+from device.services.device_registration import register, activate
 
 
 class DeviceViewSet(ModelViewSet):

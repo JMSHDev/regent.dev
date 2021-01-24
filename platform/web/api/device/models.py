@@ -1,3 +1,7 @@
+import hashlib
+import random
+import string
+
 from django.db import models
 
 
@@ -16,7 +20,13 @@ class Telemetry(models.Model):
 
 
 class Credentials(models.Model):
-    name = models.CharField(max_length=50, primary_key=True)
-    password = models.CharField(max_length=50)
-    salt = models.CharField(max_length=50)
+    name = models.CharField(max_length=100, primary_key=True)
+    password = models.CharField(max_length=100)
+    salt = models.CharField(max_length=10)
     activated = models.BooleanField(default=False)
+
+    @classmethod
+    def create(cls, name, password):
+        salt = "".join(random.choice(string.ascii_letters) for _ in range(10))
+        password = hashlib.sha256((password + salt).encode("utf-8")).hexdigest()
+        return Credentials(name=name, password=password, salt=salt)
