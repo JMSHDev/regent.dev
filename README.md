@@ -76,7 +76,7 @@ Registration response:
 
 ```json
 {
-  "reason": "Some reason."
+  "error": "Some reason."
 }
 ```
 
@@ -98,6 +98,6 @@ Activation response:
 
 ```json
 {
-  "reason": "Some reason."
+  "error": "Some reason."
 }
 ```

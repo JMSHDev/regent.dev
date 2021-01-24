@@ -166,3 +166,5 @@ CORS_ALLOWED_ORIGINS = (
     if os.environ.get("CORS_ALLOWED_ORIGINS")
     else ["http://localhost:8080"]
 )
+
+CUSTOMER_ID = os.environ["MQTT_CUSTOMER_ID"]

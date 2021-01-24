@@ -29,7 +29,7 @@ class DeviceViewSet(ModelViewSet):
                 return Response(serializer.errors, HTTP_400_BAD_REQUEST)
 
     @action(detail=False, permission_classes=[AllowAny], methods=["post"], serializer_class=ActivateDeviceSerializer)
-    def post(self, request, *args, **kwargs):
+    def activate(self, request, *args, **kwargs):
         serializer = ActivateDeviceSerializer(data=request.data)
         if serializer.is_valid():
             try:
@@ -42,6 +42,10 @@ class DeviceViewSet(ModelViewSet):
                     return Response(act_result["content"], HTTP_403_FORBIDDEN)
             except Exception as exp:
                 return Response(serializer.errors, HTTP_400_BAD_REQUEST)
+
+    def perform_destroy(self, instance):
+        instance.delete_corresponding_credentials()
+        instance.delete()
 
 
 class PingViewSet(GenericViewSet, ListModelMixin):

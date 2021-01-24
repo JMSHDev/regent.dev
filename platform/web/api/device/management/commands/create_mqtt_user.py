@@ -13,6 +13,6 @@ class Command(BaseCommand):
         if Credentials.objects.filter(name=options["name"]).exists():
             raise CommandError("Provided username already exists.")
         else:
-            new_credentials = Credentials.create(options["name"], options["password"])
+            new_credentials = Credentials.create(options["name"], options["password"], True)
             new_credentials.save()
         self.stdout.write(self.style.SUCCESS(f"User {options['name']} created."))
