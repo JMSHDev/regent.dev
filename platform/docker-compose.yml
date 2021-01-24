@@ -27,12 +27,12 @@ services:
       - .db.env.dev
     ports:
       - 5433:5432 # For debugging only
-  mqtt_bridge:
-    build: ./mqtt_bridge
-    env_file:
-      - .mqtt_bridge.env.dev
-    depends_on:
-      - mqtt
+#  mqtt_bridge:
+#    build: ./mqtt_bridge
+#    env_file:
+#      - .mqtt_bridge.env.dev
+#    depends_on:
+#      - mqtt
   mqtt:
     build: ./emqx
     volumes:

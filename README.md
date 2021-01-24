@@ -64,7 +64,7 @@ Registration payload:
 
 Registration response:
 
-200:
+201:
 
 ```json
 {

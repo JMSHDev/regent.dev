@@ -21,5 +21,8 @@ class ActivateDeviceSerializer(serializers.Serializer):
     password = serializers.CharField(required=True, allow_blank=False)
 
 
-# class TelemetrySerializer(serializers.Serializer):
-#     device_state = serializers.JSONField(required=True, allow_null=False)
+class MqttMessageSerializer(serializers.Serializer):
+    from_username = serializers.CharField(required=True, allow_blank=False)
+    topic = serializers.CharField(required=True, allow_blank=False)
+    payload = serializers.CharField(required=True, allow_blank=False)
+    ts = serializers.IntegerField(required=True)

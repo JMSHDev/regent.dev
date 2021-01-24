@@ -1,16 +1,23 @@
 from rest_framework.decorators import action
-from rest_framework.viewsets import GenericViewSet, ModelViewSet
-from rest_framework.mixins import ListModelMixin
+from rest_framework.views import APIView
+from rest_framework.viewsets import GenericViewSet
+from rest_framework.mixins import RetrieveModelMixin, UpdateModelMixin, DestroyModelMixin, ListModelMixin
 from rest_framework.response import Response
-from rest_framework.status import HTTP_200_OK, HTTP_400_BAD_REQUEST, HTTP_201_CREATED, HTTP_403_FORBIDDEN
+from rest_framework.status import HTTP_400_BAD_REQUEST, HTTP_201_CREATED, HTTP_403_FORBIDDEN, HTTP_200_OK
 from rest_framework.permissions import IsAuthenticated, AllowAny
 
-from device.serializers import DeviceSerializer, RegisterDeviceSerializer, ActivateDeviceSerializer
+from device.serializers import (
+    DeviceSerializer,
+    RegisterDeviceSerializer,
+    ActivateDeviceSerializer,
+    MqttMessageSerializer,
+)
 from device.models import Device
 from device.services.device_registration import register, activate
+from device.services.device_state import update
 
 
-class DeviceViewSet(ModelViewSet):
+class DeviceViewSet(RetrieveModelMixin, UpdateModelMixin, DestroyModelMixin, ListModelMixin, GenericViewSet):
     queryset = Device.objects.all()
     serializer_class = DeviceSerializer
     permission_classes = [IsAuthenticated]
@@ -37,7 +44,7 @@ class DeviceViewSet(ModelViewSet):
                     serializer.data["customer_id"], serializer.data["device_id"], serializer.data["password"]
                 )
                 if act_result["success"]:
-                    return Response(act_result["content"], HTTP_201_CREATED)
+                    return Response(act_result["content"], HTTP_200_OK)
                 else:
                     return Response(act_result["content"], HTTP_403_FORBIDDEN)
             except Exception as exp:
@@ -46,6 +53,22 @@ class DeviceViewSet(ModelViewSet):
     def perform_destroy(self, instance):
         instance.delete_corresponding_credentials()
         instance.delete()
+
+
+class UpdateDeviceState(APIView):
+    permission_classes = [AllowAny]
+
+    def put(self, request, name, format=None):
+        serializer = MqttMessageSerializer(data=request.data)
+        if serializer.is_valid():
+            try:
+                act_result = update(serializer.data)
+                if act_result["success"]:
+                    return Response(act_result["content"], HTTP_200_OK)
+                else:
+                    return Response(act_result["content"], HTTP_403_FORBIDDEN)
+            except Exception as exp:
+                return Response(serializer.errors, HTTP_400_BAD_REQUEST)
 
 
 class PingViewSet(GenericViewSet, ListModelMixin):
