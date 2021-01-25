@@ -1,4 +1,5 @@
-from rest_framework.decorators import action
+from rest_framework.reverse import reverse
+from rest_framework.decorators import action, api_view
 from rest_framework.views import APIView
 from rest_framework.viewsets import GenericViewSet
 from rest_framework.mixins import RetrieveModelMixin, UpdateModelMixin, DestroyModelMixin, ListModelMixin
@@ -58,7 +59,7 @@ class DeviceViewSet(RetrieveModelMixin, UpdateModelMixin, DestroyModelMixin, Lis
 class UpdateDeviceState(APIView):
     permission_classes = [AllowAny]
 
-    def put(self, request, name, format=None):
+    def post(self, request, format=None):
         serializer = MqttMessageSerializer(data=request.data)
         if serializer.is_valid():
             try:
@@ -76,3 +77,12 @@ class PingViewSet(GenericViewSet, ListModelMixin):
 
     def list(self, request, *args, **kwargs):
         return Response(data={"id": request.GET.get("id")}, status=HTTP_200_OK)
+
+
+@api_view(["GET"])
+def privateapi_root(request, format=None):
+    return Response(
+        {
+            "update-device": reverse("update-device", request=request, format=format),
+        }
+    )

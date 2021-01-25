@@ -13,5 +13,6 @@ urlpatterns = [
     path("api/token/both/", TokenObtainPairView.as_view(), name="token_obtain_pair"),
     path("api/", include(public_api_router.urls)),
     path("api/auth/", include("rest_framework.urls")),
-    path("privateapi/devices/state/", views.UpdateDeviceState.as_view()),
+    path("privateapi/update-device/", views.UpdateDeviceState.as_view(), name="update-device"),
+    path("privateapi/", views.privateapi_root),
 ]
