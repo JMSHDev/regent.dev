@@ -9,7 +9,7 @@ def update(data):
     device_name = data["from_username"]
     topic = data["topic"]
 
-    if topic != f"devices/{device_name}/state":
+    if device_name not in topic:
         return {"success": False, "content": f"Invalid topic {topic}."}
 
     try:

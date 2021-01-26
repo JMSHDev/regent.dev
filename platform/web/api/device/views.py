@@ -41,9 +41,7 @@ class DeviceViewSet(RetrieveModelMixin, UpdateModelMixin, DestroyModelMixin, Lis
         serializer = ActivateDeviceSerializer(data=request.data)
         if serializer.is_valid():
             try:
-                act_result = activate(
-                    serializer.data["customer_id"], serializer.data["device_id"], serializer.data["password"]
-                )
+                act_result = activate(serializer.data["device_id"], serializer.data["password"])
                 if act_result["success"]:
                     return Response(act_result["content"], HTTP_200_OK)
                 else:

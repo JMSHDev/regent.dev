@@ -41,7 +41,7 @@ INSTALLED_APPS = [
     "django.contrib.staticfiles",
     "rest_framework",
     "rest_framework.authtoken",
-    "device"
+    "device",
 ]
 
 MIDDLEWARE = [
@@ -168,3 +168,4 @@ CORS_ALLOWED_ORIGINS = (
 )
 
 CUSTOMER_ID = os.environ["MQTT_CUSTOMER_ID"]
+CUSTOMER_PASSWORD = os.environ["MQTT_CUSTOMER_PASSWORD"]
