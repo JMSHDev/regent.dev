@@ -2,14 +2,14 @@ import json
 
 from django.core.exceptions import ObjectDoesNotExist
 
-from device.models import Device
+from device.models import Device, Telemetry
 
 
 def update(data):
     device_name = data["from_username"]
     topic = data["topic"]
 
-    if device_name not in topic:
+    if not topic.endswith(f"{device_name}/state"):
         return {"success": False, "content": f"Invalid topic {topic}."}
 
     try:
@@ -24,4 +24,8 @@ def update(data):
 
     device.status = state_json["status"]
     device.save()
+
+    telemetry = Telemetry(device=device, state=state_json)
+    telemetry.save()
+
     return {"success": True, "content": None}

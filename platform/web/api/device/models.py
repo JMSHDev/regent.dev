@@ -29,6 +29,9 @@ class MqttAuth(models.Model):
         Device, on_delete=models.CASCADE, related_name="auth", related_query_name="auth", null=True
     )
 
+    def __str__(self):
+        return "activated" if self.activated else "not activated"
+
     @classmethod
     def create(cls, username, password, activated, device=None):
         salt = "".join(random.choice(string.ascii_letters) for _ in range(10))
@@ -52,5 +55,5 @@ class Telemetry(models.Model):
     device = models.ForeignKey(
         Device, on_delete=models.CASCADE, related_name="telemetry", related_query_name="telemetry"
     )
-    date_recorded = models.DateTimeField()
-    device_state = models.JSONField()
+    created_on = models.DateTimeField(auto_now_add=True)
+    state = models.JSONField()

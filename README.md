@@ -36,10 +36,11 @@ response with a password it can send another request that will prompt the server
 password.
 
 After obtaining password from the server, the device has to call another api to confirm that it has received credentials
+
 - this will activate the credentials and make them usable to connect to MQTT. Once a specific MAC address has been
-registered and activated, the registration api cannot be used to re-register the same MAC address. If, after successful
-activation, the activation api is called again with the same password there is no extra effect (activation api is
-idempotent).
+  registered and activated, the registration api cannot be used to re-register the same MAC address. If, after
+  successful activation, the activation api is called again with the same password there is no extra effect (activation
+  api is idempotent).
 
 ### Clarifications
 
@@ -48,12 +49,13 @@ limit the api will not be able to do anything until the limit is increased. The 
 device has to have a unique name.
 
 The reason for disabling registration api for particular MAC address once it is registered and activated is to prevent
-ability to re-register a device by attacker that knows MAC address and customer number. That would enable the
-attacker to disconnect the original device and potentially impersonate it on the platform.
+ability to re-register a device by attacker that knows MAC address and customer number. That would enable the attacker
+to disconnect the original device and potentially impersonate it on the platform.
 
 ### Specs
+Registration /api/devices/register/
 
-Registration payload:
+Payload:
 
 ```json
 {
@@ -80,8 +82,9 @@ Registration response:
 }
 ```
 
-Activation payload:
+Activation /api/devices/activate/:
 
+Payload:
 ```json
 {
   "mac_address": "44:8a:5b:9c:70:93",
@@ -100,3 +103,27 @@ Activation response:
   "error": "Some reason."
 }
 ```
+
+## Private API
+
+In addition to the public api platform has a private api that is used by the MQTT broker to "forward" messages published
+by devices.
+
+Update /privateapi/update-device/:
+
+Payload:
+
+```json
+{
+	"from_username": "123",
+	"topic": "devices/out/zxc/123/state",
+	"payload": "{\"status\": \"online\", \"att1\": \"val1\", \"att2\": \"val2\"}",
+	"ts": 123
+}
+```
+
+where "from_username" is mqtt username (the same as device name), "topic" is mqtt topic, "ts" is message timestamp, and
+payload is mqtt message. The payload is a string that we interpret as json, so we have to escape all quotes. 
+
+The payload must contain status field. 
+The topic must be: "devices/out/zxc/{from_username}/state"

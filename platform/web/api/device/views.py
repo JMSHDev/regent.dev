@@ -34,7 +34,9 @@ class DeviceViewSet(RetrieveModelMixin, UpdateModelMixin, DestroyModelMixin, Lis
                 else:
                     return Response(reg_result["content"], HTTP_403_FORBIDDEN)
             except Exception as exp:
-                return Response(serializer.errors, HTTP_400_BAD_REQUEST)
+                return Response("Error while registering the device.", HTTP_400_BAD_REQUEST)
+        else:
+            return Response(serializer.errors, HTTP_400_BAD_REQUEST)
 
     @action(detail=False, permission_classes=[AllowAny], methods=["post"], serializer_class=ActivateDeviceSerializer)
     def activate(self, request, *args, **kwargs):
@@ -47,7 +49,9 @@ class DeviceViewSet(RetrieveModelMixin, UpdateModelMixin, DestroyModelMixin, Lis
                 else:
                     return Response(act_result["content"], HTTP_403_FORBIDDEN)
             except Exception as exp:
-                return Response(serializer.errors, HTTP_400_BAD_REQUEST)
+                return Response("Error whole activating the device.", HTTP_400_BAD_REQUEST)
+        else:
+            return Response(serializer.errors, HTTP_400_BAD_REQUEST)
 
     def perform_destroy(self, instance):
         instance.delete_corresponding_credentials()
@@ -67,7 +71,9 @@ class UpdateDeviceState(APIView):
                 else:
                     return Response(act_result["content"], HTTP_403_FORBIDDEN)
             except Exception as exp:
-                return Response(serializer.errors, HTTP_400_BAD_REQUEST)
+                return Response("Error while updating the device.", HTTP_400_BAD_REQUEST)
+        else:
+            return Response(serializer.errors, HTTP_400_BAD_REQUEST)
 
 
 class PingViewSet(GenericViewSet, ListModelMixin):

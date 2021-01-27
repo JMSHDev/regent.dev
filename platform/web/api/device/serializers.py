@@ -4,9 +4,11 @@ from device.models import Device
 
 
 class DeviceSerializer(serializers.HyperlinkedModelSerializer):
+    auth = serializers.StringRelatedField(many=True)
+
     class Meta:
         model = Device
-        fields = ["url", "name", "customer", "status", "last_updated"]
+        fields = ["url", "name", "customer", "status", "last_updated", "auth"]
         read_only_fields = ["name", "customer", "status", "last_updated"]
 
 
