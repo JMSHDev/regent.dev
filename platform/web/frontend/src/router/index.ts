@@ -1,5 +1,5 @@
 import { createRouter, createWebHistory, RouteRecordRaw } from "vue-router";
-import Home from "../views/Home.vue";
+import Devices from "../views/Devices.vue";
 import Login from "../views/Login.vue";
 import AuthenticatedPing from "../views/AuthennticatedPing.vue";
 
@@ -10,8 +10,8 @@ const PUBLIC_PATHS = ["/login"];
 const routes: Array<RouteRecordRaw> = [
   {
     path: "/",
-    name: "Home",
-    component: Home,
+    name: "Devices",
+    component: Devices,
   },
   {
     path: "/login",

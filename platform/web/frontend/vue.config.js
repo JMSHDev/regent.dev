@@ -1,7 +1,7 @@
 module.exports = {
   chainWebpack: (config) => {
     config.plugin("html").tap((args) => {
-      args[0].title = "Command Center";
+      args[0].title = "Regent";
       return args;
     });
   },

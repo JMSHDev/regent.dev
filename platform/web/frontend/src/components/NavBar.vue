@@ -1,21 +1,21 @@
 <template>
   <nav class="navbar navbar-expand-md navbar-dark bg-dark">
     <div class="container">
-      <router-link class="navbar-brand" to="/">Command Center</router-link>
+      <router-link class="navbar-brand" to="/">regent.dev</router-link>
       <button class="navbar-toggler" type="button" @click="switchCollapse">
         <span class="navbar-toggler-icon"></span>
       </button>
       <div class="navbar-collapse" :class="[state.collapse]">
-        <ul class="navbar-nav me-auto mb-2 mb-md-0">
+        <ul class="navbar-nav me-auto">
           <li class="nav-item">
-            <router-link class="nav-link" to="/">Home</router-link>
+            <router-link class="nav-link" to="/">Devices</router-link>
           </li>
           <li class="nav-item">
-            <router-link class="nav-link" to="/ping">Ping</router-link>
+            <router-link class="nav-link me-3" to="/">Docs</router-link>
           </li>
         </ul>
 
-        <button class="d-flex btn btn-danger" @click="handleLogout">Logout</button>
+        <button class="btn btn-danger" @click="handleLogout">Logout</button>
       </div>
     </div>
   </nav>
