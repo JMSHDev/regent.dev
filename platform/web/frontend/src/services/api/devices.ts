@@ -17,8 +17,8 @@ const getDeviceList = async () => {
       name: device.name,
       customer: device.customer,
       status: device.status,
-      lastUpdated: device.last_updated,
-      activated: device.auth[0] === "activated"
+      lastUpdated: new Date(device.last_updated).toLocaleString("en-GB", { timeZone: "UTC" }),
+      activated: device.auth[0] === "activated",
     });
   }
 

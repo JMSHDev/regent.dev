@@ -115,10 +115,10 @@ Payload:
 
 ```json
 {
-	"from_username": "123",
-	"topic": "devices/out/zxc/123/state",
-	"payload": "{\"status\": \"online\", \"att1\": \"val1\", \"att2\": \"val2\"}",
-	"ts": 123
+  "from_username": "123",
+  "topic": "devices/out/some_customer_id/123/state",
+  "payload": "{\"status\": \"online\", \"att1\": \"val1\", \"att2\": \"val2\"}",
+  "ts": 123
 }
 ```
 
