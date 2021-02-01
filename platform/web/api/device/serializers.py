@@ -1,6 +1,6 @@
 from rest_framework import serializers
 
-from device.models import Device
+from device.models import Device, Telemetry
 
 
 class DeviceSerializer(serializers.HyperlinkedModelSerializer):
@@ -27,3 +27,10 @@ class MqttMessageSerializer(serializers.Serializer):
     topic = serializers.CharField(required=True, allow_blank=False)
     payload = serializers.CharField(required=True, allow_blank=False)
     ts = serializers.IntegerField(required=True)
+
+
+class TelemetrySerializer(serializers.HyperlinkedModelSerializer):
+    class Meta:
+        model = Telemetry
+        fields = ["url", "created_on", "device", "state"]
+        read_only_fields = ["url", "created_on", "device", "state"]

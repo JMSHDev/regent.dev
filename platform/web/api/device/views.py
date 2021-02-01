@@ -6,14 +6,16 @@ from rest_framework.mixins import RetrieveModelMixin, UpdateModelMixin, DestroyM
 from rest_framework.response import Response
 from rest_framework.status import HTTP_400_BAD_REQUEST, HTTP_201_CREATED, HTTP_403_FORBIDDEN, HTTP_200_OK
 from rest_framework.permissions import IsAuthenticated, AllowAny
+from django_filters import FilterSet, IsoDateTimeFilter, CharFilter
 
 from device.serializers import (
     DeviceSerializer,
     RegisterDeviceSerializer,
     ActivateDeviceSerializer,
     MqttMessageSerializer,
+    TelemetrySerializer,
 )
-from device.models import Device
+from device.models import Device, Telemetry
 from device.services.device_registration import register, activate
 from device.services.device_state import update
 
@@ -90,3 +92,20 @@ def privateapi_root(request, format=None):
             "update-device": reverse("update-device", request=request, format=format),
         }
     )
+
+
+class TelemetryFilter(FilterSet):
+    start = IsoDateTimeFilter(field_name="created_on", lookup_expr="gte")
+    end = IsoDateTimeFilter(field_name="created_on", lookup_expr="lte")
+    device = CharFilter(field_name="device__name")
+
+    class Meta:
+        model = Telemetry
+        fields = ("start", "end")
+
+
+class TelemetryViewSet(RetrieveModelMixin, UpdateModelMixin, DestroyModelMixin, ListModelMixin, GenericViewSet):
+    queryset = Telemetry.objects.all()
+    serializer_class = TelemetrySerializer
+    permission_classes = [IsAuthenticated]
+    filterset_class = TelemetryFilter
