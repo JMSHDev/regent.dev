@@ -11,7 +11,7 @@ LOG = logging.getLogger(__name__)
 
 class Device(models.Model):
     name = models.CharField(max_length=50, unique=True)
-    customer = models.CharField(max_length=50, unique=True)
+    customer = models.CharField(max_length=50)
     status = models.CharField(max_length=10, default="offline")
     last_updated = models.DateTimeField(auto_now=True)
 

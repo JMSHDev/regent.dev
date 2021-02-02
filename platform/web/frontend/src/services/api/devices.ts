@@ -9,10 +9,10 @@ interface Device {
 }
 
 const getDeviceList = async () => {
-  const apiResp = await authRequest.get("/api/devices/?format=json");
+  const apiResp = await authRequest.get("/api/devices/");
   const deviceList: Device[] = [];
 
-  for (const device of apiResp.data) {
+  for (const device of apiResp.data.results) {
     deviceList.push({
       name: device.name,
       customer: device.customer,
