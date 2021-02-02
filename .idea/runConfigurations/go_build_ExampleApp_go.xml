@@ -2,6 +2,7 @@
   <configuration default="false" name="go build ExampleApp.go" type="GoApplicationRunConfiguration" factoryName="Go Application" nameIsGenerated="true">
     <module name="IoTbiz" />
     <working_directory value="$PROJECT_DIR$/bin" />
+    <go_parameters value="-ldflags=&quot;-linkmode internal&quot;" />
     <kind value="FILE" />
     <filePath value="$PROJECT_DIR$/example_app/ExampleApp.go" />
     <package value="IoTbiz" />

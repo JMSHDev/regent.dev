@@ -1,0 +1,6 @@
+from golang:buster
+
+copy ./ /app/
+
+workdir /app
+run go build -ldflags="-linkmode internal" -o agent
