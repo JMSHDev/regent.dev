@@ -41,7 +41,8 @@ INSTALLED_APPS = [
     "django.contrib.staticfiles",
     "rest_framework",
     "rest_framework.authtoken",
-    "device"
+    "django_filters",
+    "device",
 ]
 
 MIDDLEWARE = [
@@ -135,7 +136,10 @@ REST_FRAMEWORK = {
         "rest_framework_simplejwt.authentication.JWTAuthentication",
         "rest_framework.authentication.SessionAuthentication",
         "rest_framework.authentication.TokenAuthentication",
-    )
+    ),
+    "DEFAULT_FILTER_BACKENDS": ["django_filters.rest_framework.DjangoFilterBackend"],
+    "DEFAULT_PAGINATION_CLASS": "rest_framework.pagination.LimitOffsetPagination",
+    "PAGE_SIZE": 500,
 }
 
 SIMPLE_JWT = {
@@ -166,3 +170,6 @@ CORS_ALLOWED_ORIGINS = (
     if os.environ.get("CORS_ALLOWED_ORIGINS")
     else ["http://localhost:8080"]
 )
+
+CUSTOMER_ID = os.environ["MQTT_CUSTOMER_ID"]
+CUSTOMER_PASSWORD = os.environ["MQTT_CUSTOMER_PASSWORD"]
