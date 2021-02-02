@@ -17,13 +17,13 @@ type MQTTServerDetails struct {
 type MQTTMessage struct {
 	MessageType int
 	data        string
+	topic       string
+	qos         int
 }
 
 const (
 	SHUTDOWN = iota
-	START    = iota
-	STOP     = iota
-	STDOUT   = iota
+	PUBLISH  = iota
 )
 
 func subscribeToMqttServer(mqttServer MQTTServerDetails, waitGroup *sync.WaitGroup, deviceID string, messages chan MQTTMessage) {
@@ -89,11 +89,7 @@ func clockMQTT(c mqtt.Client, deviceID string, messages chan MQTTMessage) {
 				case SHUTDOWN:
 					loop = false
 					print("got shutdown message\n")
-				case START:
-					c.Publish(fmt.Sprintf("devices/%v/start", deviceID), 2, true, "Process started at: "+time.Now().String())
-				case STOP:
-					c.Publish(fmt.Sprintf("devices/%v/stop", deviceID), 2, true, "Process stopped at: "+time.Now().String())
-				case STDOUT:
+				case PUBLISH:
 					c.Publish(fmt.Sprintf("devices/%v/stdout", deviceID), 2, false, m.data)
 				}
 			}

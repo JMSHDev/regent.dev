@@ -34,7 +34,14 @@ func main() {
 	var waitGroup sync.WaitGroup // wait for everything to finish so can safely shutdown
 
 	go subscribeToMqttServer(mqttServer, &waitGroup, config.DeviceID, mqttMessages)
-	launchProcess(config.PathToExecutable, config.Arguments, processMessages, mqttMessages, config.AutoRestart, config.RestartDelayMs, &waitGroup)
+	launchProcess(config.PathToExecutable,
+		config.Arguments,
+		processMessages,
+		mqttMessages,
+		config.AutoRestart,
+		config.RestartDelayMs,
+		config.DeviceID,
+		&waitGroup)
 
 	sigs := make(chan os.Signal, 1)
 	signal.Notify(sigs, syscall.SIGINT, syscall.SIGTERM)
@@ -46,7 +53,7 @@ func main() {
 			case sig := <-sigs:
 				log.Print("Exit signal received\n")
 				log.Print(sig)
-				mqttMessages <- MQTTMessage{SHUTDOWN, ""}
+				mqttMessages <- MQTTMessage{SHUTDOWN, "", "", 2}
 				processMessages <- "shutdown"
 				break
 			default:
@@ -59,13 +66,21 @@ func main() {
 	print("done\n")
 }
 
-func launchProcess(pathToExecutable string, arguments string, inputMessages chan string, mqttMessages chan MQTTMessage, autoRestart bool, restartDelayMs int, waitGroup *sync.WaitGroup) {
+func launchProcess(
+	pathToExecutable string,
+	arguments string,
+	inputMessages chan string,
+	mqttMessages chan MQTTMessage,
+	autoRestart bool,
+	restartDelayMs int,
+	deviceID string,
+	waitGroup *sync.WaitGroup) {
 	waitGroup.Add(1)
 	go func() {
 		defer waitGroup.Done()
 
 		for {
-			exitNow := launchProcessAux(pathToExecutable, arguments, inputMessages, mqttMessages)
+			exitNow := launchProcessAux(pathToExecutable, arguments, inputMessages, mqttMessages, deviceID)
 			if exitNow {
 				break
 			}
@@ -80,7 +95,7 @@ func launchProcess(pathToExecutable string, arguments string, inputMessages chan
 	}()
 }
 
-func launchProcessAux(pathToExecutable string, arguments string, inputMessages chan string, mqttMessages chan MQTTMessage) bool {
+func launchProcessAux(pathToExecutable string, arguments string, inputMessages chan string, mqttMessages chan MQTTMessage, deviceID string) bool {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
@@ -98,9 +113,9 @@ func launchProcessAux(pathToExecutable string, arguments string, inputMessages c
 
 	ch := make(chan error)
 	go func() {
-		mqttMessages <- MQTTMessage{START, ""}
+		mqttMessages <- MQTTMessage{PUBLISH, "Process started at: " + time.Now().String(), fmt.Sprintf("devices/%v/start", deviceID), 2}
 		runResult := cmd.Run()
-		mqttMessages <- MQTTMessage{STOP, ""}
+		mqttMessages <- MQTTMessage{PUBLISH, "Process stopped at: " + time.Now().String(), fmt.Sprintf("devices/%v/stop", deviceID), 2}
 		ch <- runResult
 	}()
 
@@ -127,7 +142,7 @@ func launchProcessAux(pathToExecutable string, arguments string, inputMessages c
 		} else {
 			currentLine = append(currentLine, bytes...)
 			print(string(currentLine))
-			mqttMessages <- MQTTMessage{STDOUT, string(currentLine)}
+			mqttMessages <- MQTTMessage{PUBLISH, string(currentLine), fmt.Sprintf("devices/%v/stdout", deviceID), 2}
 			currentLine = []byte{}
 		}
 	}
