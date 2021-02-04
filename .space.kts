@@ -9,7 +9,7 @@ job("Build agent and ExampleApp") {
     container("golang:buster") {
         shellScript {
             interpreter = "/bin/bash"
-            location = "build.sh"
+            location = "build_agent.sh"
             //args("--my-first-arg", "--my-second-arg")
         }
     }
