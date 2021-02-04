@@ -5,12 +5,11 @@
 */
 
 
-job("Build agent and ExampleApp") {
+job("Compile agent and ExampleApp") {
     container("golang:buster") {
         shellScript {
             interpreter = "/bin/bash"
             location = "build_agent.sh"
-            //args("--my-first-arg", "--my-second-arg")
         }
     }
 }
