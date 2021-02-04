@@ -1,11 +1,13 @@
 <template>
-  <div class="card" style="width: 18rem">
-    <div class="card-body">
-      <h5 class="card-title">{{ name }}</h5>
-      <h6 class="card-subtitle mb-2 text-muted">{{ status }}</h6>
-      <p class="card-text">Last modified: {{ lastUpdated }}</p>
-      <p class="card-text">Activated: {{ activated }}</p>
-      <a href="#" class="btn btn-primary">Go to device</a>
+  <div class="col">
+    <div class="card" style="min-width: 20rem">
+      <div class="card-body">
+        <h5 class="card-title">{{ name }}</h5>
+        <h6 class="card-subtitle mb-2 text-muted">{{ status }}</h6>
+        <p class="card-text">Last updated: {{ lastUpdated }}</p>
+        <p class="card-text">Activated: {{ activated }}</p>
+        <a href="#" class="btn btn-primary">Go to device</a>
+      </div>
     </div>
   </div>
 </template>

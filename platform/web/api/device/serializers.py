@@ -33,4 +33,4 @@ class TelemetrySerializer(serializers.HyperlinkedModelSerializer):
     class Meta:
         model = Telemetry
         fields = ["url", "created_on", "device", "state"]
-        read_only_fields = ["url", "created_on", "device", "state"]
+        read_only_fields = ["created_on", "device", "state"]

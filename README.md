@@ -60,7 +60,7 @@ Payload:
 ```json
 {
   "customer_id": "abc123",
-  "mac_address": "44:8a:5b:9c:70:93"
+  "device_id": "44:8a:5b:9c:70:93"
 }
 ```
 
@@ -87,7 +87,7 @@ Activation /api/devices/activate/:
 Payload:
 ```json
 {
-  "mac_address": "44:8a:5b:9c:70:93",
+  "device_id": "44:8a:5b:9c:70:93",
   "password": "234qweasdzxc"
 }
 ```
