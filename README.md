@@ -1,18 +1,15 @@
-# IoTBiz
+# Regent.dev
 
-A program which bootstraps an non-IoT device into an IoT enabled one!
+Regent.io ia software which bootstraps a non-IoT device into an IoT enabled one, or enabled rapid development of a new IoT device.
 
-A simple program on the device acts as an agent, running the main application(s) that it requires. The agent program
-monitors the system processes, allowing them to be remotely administered using a remote server.
+A program on the device (the agent) acts as a supervisor program, running the other processes that you require.
+The agent program monitors yours processes, restarting them if required.
+The agent securely connects to the regent.io platform via MQTT/tls & HTTPS.
+The regent.io platform allows your devices to be remotely administered.
 
-## Use case
+## Supported Platforms
 
-As a developer, I want to have a quick drop-in solution that I can use to build devices so that I can remotely monitor,
-administer and reliably upgrade them so that I can quickly make working IoT devices or platforms for rapid deployment.
-
-## Requirements
-
-Agent code r
+Regent.io agent operates on any platform supported by Golang including Intel, Arm, Mips & RiscV hardware and Linux & Windows OS.
 
 # Platform API
 

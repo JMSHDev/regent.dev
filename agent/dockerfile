@@ -1,6 +1,8 @@
+# Docker container to automate building agent using Golang
+
 from golang:buster
 
-copy ./ /app/
+copy ./ /build_dir/
 
-workdir /app
+workdir /build_dir
 run go build -ldflags="-linkmode internal" -o agent
