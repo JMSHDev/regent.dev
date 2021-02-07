@@ -1,5 +1,5 @@
 {
-  "PathToExecutable": "ExampleApp",
+  "PathToExecutable": "./ExampleApp",
   "Arguments": "foo",
   "AutoRestart": true,
   "RestartDelayMs": 10000,
