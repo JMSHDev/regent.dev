@@ -1,7 +1,8 @@
 <component name="ProjectRunConfigurationManager">
-  <configuration default="false" name="go build ExampleApp.go" type="GoApplicationRunConfiguration" factoryName="Go Application" nameIsGenerated="true">
+  <configuration default="false" name="ExampleApp" type="GoApplicationRunConfiguration" factoryName="Go Application">
     <module name="IoTbiz" />
-    <working_directory value="$PROJECT_DIR$/bin" />
+    <working_directory value="$PROJECT_DIR$/bin/" />
+    <go_parameters value="-ldflags=&quot;-linkmode internal&quot;" />
     <kind value="FILE" />
     <filePath value="$PROJECT_DIR$/example_app/ExampleApp.go" />
     <package value="IoTbiz" />

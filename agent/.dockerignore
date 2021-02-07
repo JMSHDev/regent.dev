@@ -1,0 +1,5 @@
+# ignore everything except go files
+*
+!dockerignore
+!*.go
+!go.mod

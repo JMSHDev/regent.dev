@@ -1,7 +1,8 @@
 <component name="ProjectRunConfigurationManager">
-  <configuration default="false" name="go build agent/" type="GoApplicationRunConfiguration" factoryName="Go Application" nameIsGenerated="true">
+  <configuration default="false" name="agent" type="GoApplicationRunConfiguration" factoryName="Go Application">
     <module name="IoTbiz" />
     <working_directory value="$PROJECT_DIR$/bin/" />
+    <go_parameters value="-ldflags=&quot;-linkmode internal&quot;" />
     <kind value="DIRECTORY" />
     <filePath value="$PROJECT_DIR$/agent/IoTEnabler.go" />
     <package value="c:\Stu\Code\IoTbiz\agent" />
