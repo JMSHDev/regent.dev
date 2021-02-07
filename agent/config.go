@@ -14,6 +14,10 @@ type Config struct {
 	AutoRestart      bool
 	RestartDelayMs   int
 	DeviceID         string
+	CustomerID       string
+	MQTTAddress      string
+	MQTTUsername     string
+	MQTTPassword     string
 }
 
 func loadConfig() (Config, error) {
@@ -42,11 +46,15 @@ func saveDefaultConfig() Config {
 	defer f.Close()
 
 	defaultConfig := Config{
-		PathToExecutable: "program.exe",
+		PathToExecutable: "./program.exe",
 		Arguments:        "",
 		AutoRestart:      true,
 		RestartDelayMs:   10000,
 		DeviceID:         "deviceID",
+		CustomerID:       "sample_id",
+		MQTTAddress:      "localhost:1883",
+		MQTTUsername:     "",
+		MQTTPassword:     "",
 	}
 	jsonValue, err := json.MarshalIndent(defaultConfig, "", "  ")
 	if err != nil {
