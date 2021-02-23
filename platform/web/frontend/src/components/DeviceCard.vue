@@ -6,7 +6,7 @@
         <h6 class="card-subtitle mb-2 text-muted">{{ status }}</h6>
         <p class="card-text">Last updated: {{ lastUpdated }}</p>
         <p class="card-text">Activated: {{ activated }}</p>
-        <a href="#" class="btn btn-primary">Go to device</a>
+        <router-link class="btn btn-primary" :to="{name: 'Device', params: {pk: pk}}">Go to device</router-link>
       </div>
     </div>
   </div>
@@ -21,6 +21,7 @@ export default defineComponent({
     status: { type: String, required: true },
     lastUpdated: { type: String, required: true },
     activated: { type: Boolean, required: true },
+    pk: { type: String, required: true }
   },
 });
 </script>

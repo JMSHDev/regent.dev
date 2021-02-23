@@ -1,5 +1,6 @@
 import { createRouter, createWebHistory, RouteRecordRaw } from "vue-router";
 import Devices from "../views/Devices.vue";
+import Device from "../views/Device.vue";
 import Login from "../views/Login.vue";
 import AuthenticatedPing from "../views/AuthennticatedPing.vue";
 
@@ -12,6 +13,12 @@ const routes: Array<RouteRecordRaw> = [
     path: "/",
     name: "Devices",
     component: Devices,
+  },
+  {
+    path: "/device/:pk",
+    name: "Device",
+    component: Device,
+    props: true
   },
   {
     path: "/login",

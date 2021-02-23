@@ -7,6 +7,7 @@
         :status="device.status"
         :lastUpdated="device.lastUpdated"
         :activated="device.activated"
+        :pk="device.pk"
         v-for="device in state.deviceList"
         :key="device.name"
       />
