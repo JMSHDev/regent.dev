@@ -6,7 +6,7 @@ from rest_framework.mixins import RetrieveModelMixin, UpdateModelMixin, DestroyM
 from rest_framework.response import Response
 from rest_framework.status import HTTP_400_BAD_REQUEST, HTTP_201_CREATED, HTTP_403_FORBIDDEN, HTTP_200_OK
 from rest_framework.permissions import IsAuthenticated, AllowAny
-from django_filters import FilterSet, IsoDateTimeFilter, CharFilter
+from django_filters import FilterSet, DateFilter, CharFilter
 
 from device.serializers import (
     DeviceSerializer,
@@ -95,8 +95,8 @@ def privateapi_root(request, format=None):
 
 
 class TelemetryFilter(FilterSet):
-    start = IsoDateTimeFilter(field_name="created_on", lookup_expr="gte")
-    end = IsoDateTimeFilter(field_name="created_on", lookup_expr="lte")
+    start = DateFilter(field_name="created_on", lookup_expr="gte")
+    end = DateFilter(field_name="created_on", lookup_expr="lte")
     device = CharFilter(field_name="device__name")
 
     class Meta:
