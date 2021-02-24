@@ -23,7 +23,7 @@
 </template>
 
 <script lang="ts">
-import { defineComponent, onMounted, reactive, ref } from "vue";
+import { defineComponent, onMounted, reactive } from "vue";
 import NavBar from "@/components/NavBar.vue";
 import { nullDevice, getDevice } from "@/services/api/devices";
 
