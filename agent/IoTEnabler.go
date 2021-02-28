@@ -68,23 +68,24 @@ func main() {
 	print("done\n")
 }
 
-func registerWithPlatform(customerId string, deviceId string) {
+func registerWithPlatform(customerId string, deviceId string) (string, error) {
 	// register the device
 	var jsonStr = []byte(fmt.Sprintf(`{"customer_id":"%+v", "device_id": "%+v"}`, customerId, deviceId))
 	resp, err := http.Post("http://localhost/api/devices/register/", "application/json", bytes.NewBuffer(jsonStr))
 	if err != nil {
-		log.Fatal(err)
+		return "", fmt.Errorf("failed to register - %+v", err)
 	}
 	defer resp.Body.Close()
+
 	if !(resp.StatusCode >= 200 && resp.StatusCode < 300) {
-		log.Fatal("Failure to register with platform" + resp.Status)
+		return "", fmt.Errorf("failure to register - %+v", resp.Status)
 	}
 
 	body, err := ioutil.ReadAll(resp.Body)
 
 	var dat map[string]interface{}
 	if err := json.Unmarshal(body, &dat); err != nil {
-		log.Fatal(err)
+		return "", fmt.Errorf("failure to register - %+v", body)
 	}
 	password := dat["password"].(string)
 
@@ -94,18 +95,19 @@ func registerWithPlatform(customerId string, deviceId string) {
 	jsonStr = []byte(fmt.Sprintf(`{"device_id":"%+v", "password": "%+v"}`, deviceId, password))
 	resp2, err2 := http.Post("http://localhost/api/devices/activate/", "application/json", bytes.NewBuffer(jsonStr))
 	if err2 != nil {
-		log.Fatal(err)
+		return "", fmt.Errorf("failure to activate - %+v", err2)
 	}
 	defer resp2.Body.Close()
 	if !(resp2.StatusCode >= 200 && resp2.StatusCode < 300) {
-		log.Fatal("non 200 response when activating")
+		return "", fmt.Errorf("failure to activate - non 200 response when activating")
 	}
 
 	// write the password to the password file
 	err = ioutil.WriteFile("./MQTT_password", []byte(password), 0600)
 	if err != nil {
-		log.Fatal("Unable to open password file")
+		return "", fmt.Errorf("Unable to write password file")
 	}
 
 	os.Exit(0)
+	return password, nil
 }
