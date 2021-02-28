@@ -13,10 +13,10 @@ COPY ./frontend/babel.config.js .
 COPY ./frontend/package.json .
 COPY ./frontend/tsconfig.json .
 COPY ./frontend/vue.config.js .
+
 RUN apt-get update -y
 RUN apt-get install dos2unix -y
 RUN dos2unix *
-
 RUN npm install
 RUN npm run-script build
 
@@ -39,7 +39,9 @@ COPY entrypoint.sh .
 COPY api/api ./api
 COPY api/device ./device
 COPY api/manage.py .
+COPY api/test_postgres.py .
 COPY api/requirements.txt .
+
 RUN apt-get update -y
 RUN apt-get install dos2unix -y
 RUN dos2unix *
