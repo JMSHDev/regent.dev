@@ -1,7 +1,0 @@
-{
-  "PathToExecutable": "./ExampleApp",
-  "Arguments": "foo",
-  "AutoRestart": true,
-  "RestartDelayMs": 10000,
-  "DeviceID": "test_device"
-}

@@ -16,8 +16,8 @@ type Config struct {
 	DeviceID         string
 	CustomerID       string
 	MQTTAddress      string
-	MQTTUsername     string
-	MQTTPassword     string
+	// MQTTUsername     string
+	// MQTTPassword     string
 }
 
 func loadConfig() (Config, error) {
@@ -53,8 +53,8 @@ func saveDefaultConfig() Config {
 		DeviceID:         "deviceID",
 		CustomerID:       "sample_id",
 		MQTTAddress:      "localhost:1883",
-		MQTTUsername:     "",
-		MQTTPassword:     "",
+		//MQTTUsername:     "", // disabled since we want to be using the
+		//MQTTPassword:     "",
 	}
 	jsonValue, err := json.MarshalIndent(defaultConfig, "", "  ")
 	if err != nil {
