@@ -24,7 +24,7 @@ func main() {
 	log.Printf("%v\n", config)
 
 	// TODO: make this asynchronous
-	password := getMqttPassword(config.CustomerID, config.DeviceID)
+	password := getMqttPassword(config.CustomerID, config.DeviceID, config.PlatformAddress)
 
 	mqttServer := MQTTServerDetails{
 		address:  config.MQTTAddress,
@@ -69,12 +69,12 @@ func main() {
 	print("done\n")
 }
 
-func getMqttPassword(customerID string, deviceID string) string {
+func getMqttPassword(customerID string, deviceID string, platformAddress string) string {
 	password, err := loadPassword()
 	if err != nil {
 		// need to register with the platform
 		for {
-			password, err = registerWithPlatform(customerID, deviceID)
+			password, err = registerWithPlatform(customerID, deviceID, platformAddress)
 			if err == nil {
 				log.Printf("Registered with platform")
 				break
@@ -98,10 +98,13 @@ func loadPassword() (string, error) {
 	return string(password), err
 }
 
-func registerWithPlatform(customerId string, deviceId string) (string, error) {
+func registerWithPlatform(customerId string, deviceId string, platformAddress string) (string, error) {
 	// register the device
+	registerAddress := fmt.Sprintf("%+v/api/devices/register/", platformAddress)
+	activateAddress := fmt.Sprintf("%+v/api/devices/activate/", platformAddress)
 	var jsonStr = []byte(fmt.Sprintf(`{"customer_id":"%+v", "device_id": "%+v"}`, customerId, deviceId))
-	resp, err := http.Post("http://localhost/api/devices/register/", "application/json", bytes.NewBuffer(jsonStr))
+
+	resp, err := http.Post(registerAddress, "application/json", bytes.NewBuffer(jsonStr))
 	if err != nil {
 		return "", fmt.Errorf("failed to register - %+v", err)
 	}
@@ -128,7 +131,7 @@ func registerWithPlatform(customerId string, deviceId string) (string, error) {
 
 	// confirm activation
 	jsonStr = []byte(fmt.Sprintf(`{"device_id":"%+v", "password": "%+v"}`, deviceId, password))
-	resp2, err2 := http.Post("http://localhost/api/devices/activate/", "application/json", bytes.NewBuffer(jsonStr))
+	resp2, err2 := http.Post(activateAddress, "application/json", bytes.NewBuffer(jsonStr))
 	if err2 != nil {
 		// delete the password file, since activation failed
 		e := os.Remove("./MQTT_password")

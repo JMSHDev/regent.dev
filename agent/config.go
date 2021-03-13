@@ -16,6 +16,7 @@ type Config struct {
 	DeviceID         string
 	CustomerID       string
 	MQTTAddress      string
+	PlatformAddress  string
 	// MQTTUsername     string
 	// MQTTPassword     string
 }
@@ -53,6 +54,7 @@ func saveDefaultConfig() Config {
 		DeviceID:         "deviceID",
 		CustomerID:       "sample_id",
 		MQTTAddress:      "localhost:1883",
+		PlatformAddress:  "http://localhost",
 		//MQTTUsername:     "", // disabled since we want to be using the
 		//MQTTPassword:     "",
 	}
