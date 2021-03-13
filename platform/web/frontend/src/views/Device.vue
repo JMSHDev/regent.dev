@@ -2,7 +2,7 @@
   <NavBar />
   <div class="container">
     <h1>{{ state.device.name }}</h1>
-    <h4 class="text-muted">{{ state.device.status }}</h4>
+    <h4 :class="state.device.status === 'online' ? 'text-success' : 'text-danger'">{{ state.device.status }}</h4>
     <p>Last updated: {{ state.device.lastUpdated }}</p>
     <p>Activated: {{ state.device.activated }}</p>
     <router-link class="btn btn-primary" :to="{ name: 'Devices' }">Back to list</router-link>

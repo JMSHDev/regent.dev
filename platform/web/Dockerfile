@@ -13,6 +13,7 @@ COPY ./frontend/babel.config.js .
 COPY ./frontend/package.json .
 COPY ./frontend/tsconfig.json .
 COPY ./frontend/vue.config.js .
+COPY ./frontend/.env.production .
 
 RUN apt-get update -y
 RUN apt-get install dos2unix -y
