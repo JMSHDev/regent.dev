@@ -41,6 +41,7 @@ openssl x509 -req -in server.csr -CA ca.crt -CAkey ca.key -CAcreateserial -out s
 SCRIPTPATH="$( cd "$(dirname "$0")" >/dev/null 2>&1 ; pwd -P )"
 TLSPATH="$SCRIPTPATH"/../emqx/tls
 
+mkdir -p "$TLSPATH"
 cp ca.crt "$TLSPATH"/ca.crt
 cp server.crt "$TLSPATH"/server.crt
 cp server.key "$TLSPATH"/server.key
