@@ -17,8 +17,7 @@ type Config struct {
 	CustomerID       string
 	MQTTAddress      string
 	PlatformAddress  string
-	// MQTTUsername     string
-	// MQTTPassword     string
+	CaPath           string
 }
 
 func loadConfig() (Config, error) {
@@ -53,10 +52,9 @@ func saveDefaultConfig() Config {
 		RestartDelayMs:   10000,
 		DeviceID:         "deviceID",
 		CustomerID:       "sample_id",
-		MQTTAddress:      "localhost:1883",
+		MQTTAddress:      "localhost:8883",
 		PlatformAddress:  "http://localhost",
-		//MQTTUsername:     "", // disabled since we want to be using the
-		//MQTTPassword:     "",
+		CaPath:           "./ca.crt",
 	}
 	jsonValue, err := json.MarshalIndent(defaultConfig, "", "  ")
 	if err != nil {

@@ -26,17 +26,20 @@ func main() {
 	// TODO: make this asynchronous
 	password := getMqttPassword(config.CustomerID, config.DeviceID, config.PlatformAddress)
 
-	mqttServer := MQTTServerDetails{
-		address:  config.MQTTAddress,
-		username: config.DeviceID,
-		password: password,
+	mqttCommDetails := MqttCommDetails{
+		address:    config.MQTTAddress,
+		username:   config.DeviceID,
+		password:   password,
+		customerID: config.CustomerID,
+		deviceID:   config.DeviceID,
+		caPath:     config.CaPath,
 	}
 
-	mqttMessages := make(chan MQTTMessage)
+	mqttMessages := make(chan MqttMessage)
 	processMessages := make(chan string)
 	var waitGroup sync.WaitGroup // wait for everything to finish so can safely shutdown
 
-	go subscribeToMqttServer(mqttServer, &waitGroup, config.DeviceID, mqttMessages)
+	go subscribeToMqttServer(mqttCommDetails, &waitGroup, mqttMessages)
 	LaunchProcess(config.PathToExecutable,
 		config.Arguments,
 		processMessages,
@@ -56,7 +59,7 @@ func main() {
 			case sig := <-sigs:
 				log.Print("Exit signal received\n")
 				log.Print(sig)
-				mqttMessages <- MQTTMessage{SHUTDOWN, "", "", 2}
+				mqttMessages <- MqttMessage{SHUTDOWN, "", "", 2}
 				processMessages <- "shutdown"
 				break
 			default:

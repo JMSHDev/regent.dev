@@ -1,12 +1,12 @@
 # Regent.dev
 
-Regent.io ia software which bootstraps a non-IoT device into an IoT enabled one, or enabled rapid development of a new
+Regent.dev ia software which bootstraps a non-IoT device into an IoT enabled one, or enabled rapid development of a new
 IoT device.
 
 A program on the device (the agent) acts as a supervisor program, running the other processes that you require.
 The agent program monitors yours processes, restarting them if required.
 The agent securely connects to the regent.io platform via MQTT/tls & HTTPS.
-The regent.io platform allows your devices to be remotely administered.
+The regent.dev platform allows your devices to be remotely administered.
 
 ## Supported Platforms
 

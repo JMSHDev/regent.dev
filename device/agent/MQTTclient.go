@@ -1,20 +1,26 @@
 package main
 
 import (
+	"crypto/tls"
+	"crypto/x509"
 	"fmt"
 	mqtt "github.com/eclipse/paho.mqtt.golang"
+	"io/ioutil"
 	"log"
 	"sync"
 	"time"
 )
 
-type MQTTServerDetails struct {
-	address  string
-	username string
-	password string
+type MqttCommDetails struct {
+	address    string
+	username   string
+	password   string
+	customerID string
+	deviceID   string
+	caPath     string
 }
 
-type MQTTMessage struct {
+type MqttMessage struct {
 	MessageType int
 	data        string
 	topic       string
@@ -26,25 +32,28 @@ const (
 	PUBLISH  = iota
 )
 
-func subscribeToMqttServer(mqttServer MQTTServerDetails, waitGroup *sync.WaitGroup, deviceID string, messages chan MQTTMessage) {
+func subscribeToMqttServer(mqttCommDetails MqttCommDetails, waitGroup *sync.WaitGroup, messages chan MqttMessage) {
+	statusTopic := fmt.Sprintf("devices/out/%v/%v/state", mqttCommDetails.customerID, mqttCommDetails.deviceID)
+	//commandTopic := fmt.Sprintf("devices/in/%v/%v/command", mqttCommDetails.customerID, mqttCommDetails.deviceID)
+
 	waitGroup.Add(1) // for the mqtt
 	defer waitGroup.Done()
-	log.Printf("Connecting to MQTT Server %s", mqttServer.address)
+	log.Printf("Connecting to MQTT Server %s", mqttCommDetails.address)
 
-	var mqttCommandHandler mqtt.MessageHandler = func(client mqtt.Client, msg mqtt.Message) {
-		println(string(msg.Payload()))
-	}
+	//var mqttCommandHandler mqtt.MessageHandler = func(client mqtt.Client, msg mqtt.Message) {
+	//	println(string(msg.Payload()))
+	//}
 
 	var mqttConnectHandler mqtt.OnConnectHandler = func(client mqtt.Client) {
-		log.Printf("Connected to mqtt server %s", mqttServer.address)
+		log.Printf("Connected to mqtt server %s", mqttCommDetails.address)
 
 		// register to receive commands
-		if token := client.Subscribe(fmt.Sprintf("devices/%v/command", deviceID), 2, mqttCommandHandler); token.Wait() && token.Error() != nil {
-			log.Fatal(token.Error())
-		}
+		//if token := client.Subscribe(commandTopic, 2, mqttCommandHandler); token.Wait() && token.Error() != nil {
+		//	log.Fatal(token.Error())
+		//}
 
 		// announce that I'm online
-		if token := client.Publish(fmt.Sprintf("devices/%v/status", deviceID), 2, true, "Online"); token.Wait() && token.Error() != nil {
+		if token := client.Publish(statusTopic, 2, true, "online"); token.Wait() && token.Error() != nil {
 			log.Fatal(token.Error())
 		}
 	}
@@ -53,15 +62,18 @@ func subscribeToMqttServer(mqttServer MQTTServerDetails, waitGroup *sync.WaitGro
 		log.Printf("Connection lost, reason: %v\n", err)
 	}
 
-	opts := mqtt.NewClientOptions().AddBroker(mqttServer.address)
+	opts := mqtt.NewClientOptions().AddBroker(mqttCommDetails.address)
 	opts.SetClientID("")
 	opts.SetKeepAlive(10)
 	opts.SetOnConnectHandler(mqttConnectHandler)
 	opts.SetConnectionLostHandler(mqttConnLostHandler)
-	opts.SetUsername(mqttServer.username)
-	opts.SetPassword(mqttServer.password)
+	opts.SetUsername(mqttCommDetails.username)
+	opts.SetPassword(mqttCommDetails.password)
 	opts.SetMaxReconnectInterval(5 * time.Second)
-	opts.SetWill(fmt.Sprintf("devices/%v/status", deviceID), "Offline", 2, true)
+	opts.SetWill(statusTopic, "offline", 2, true)
+
+	rootCAs := createCAPool(mqttCommDetails.caPath)
+	opts.SetTLSConfig(&tls.Config{RootCAs: rootCAs})
 
 	// create a client and then clock it until we need to stop
 	for {
@@ -71,13 +83,13 @@ func subscribeToMqttServer(mqttServer MQTTServerDetails, waitGroup *sync.WaitGro
 			time.Sleep(1 * time.Second)
 			continue
 		} else {
-			clockMQTT(c, deviceID, messages)
+			clockMQTT(c, mqttCommDetails.deviceID, messages)
 			break
 		}
 	}
 }
 
-func clockMQTT(c mqtt.Client, deviceID string, messages chan MQTTMessage) {
+func clockMQTT(c mqtt.Client, deviceID string, messages chan MqttMessage) {
 	defer c.Disconnect(250)
 
 	loop := true
@@ -97,10 +109,25 @@ func clockMQTT(c mqtt.Client, deviceID string, messages chan MQTTMessage) {
 	}
 
 	// unsubscribe and update status
-	if token := c.Unsubscribe(fmt.Sprintf("devices/%v/command", deviceID)); token.Wait() && token.Error() != nil {
+	//if token := c.Unsubscribe(fmt.Sprintf("devices/%v/command", deviceID)); token.Wait() && token.Error() != nil {
+	//	log.Fatal(token.Error())
+	//}
+	if token := c.Publish(fmt.Sprintf("devices/%v/status", deviceID), 2, true, "offline"); token.Wait() && token.Error() != nil {
 		log.Fatal(token.Error())
 	}
-	if token := c.Publish(fmt.Sprintf("devices/%v/status", deviceID), 2, true, "Offline"); token.Wait() && token.Error() != nil {
-		log.Fatal(token.Error())
+}
+
+func createCAPool(caPath string) *x509.CertPool {
+	caCrtPem, err := ioutil.ReadFile(caPath)
+	if err != nil {
+		panic("Failed to read CA certificate")
 	}
+
+	rootCAs := x509.NewCertPool()
+	ok := rootCAs.AppendCertsFromPEM(caCrtPem)
+	if !ok {
+		panic("Failed to parse root certificate")
+	}
+
+	return rootCAs
 }

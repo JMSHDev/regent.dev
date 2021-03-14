@@ -15,7 +15,7 @@ func LaunchProcess(
 	pathToExecutable string,
 	arguments string,
 	inputMessages chan string,
-	mqttMessages chan MQTTMessage,
+	mqttMessages chan MqttMessage,
 	autoRestart bool,
 	restartDelayMs int,
 	deviceID string,
@@ -40,7 +40,7 @@ func LaunchProcess(
 	}()
 }
 
-func launchProcessAux(pathToExecutable string, arguments string, inputMessages chan string, mqttMessages chan MQTTMessage, deviceID string) bool {
+func launchProcessAux(pathToExecutable string, arguments string, inputMessages chan string, mqttMessages chan MqttMessage, deviceID string) bool {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
@@ -58,9 +58,9 @@ func launchProcessAux(pathToExecutable string, arguments string, inputMessages c
 
 	ch := make(chan error)
 	go func() {
-		mqttMessages <- MQTTMessage{PUBLISH, "Process started at: " + time.Now().String(), fmt.Sprintf("devices/%v/start", deviceID), 2}
+		mqttMessages <- MqttMessage{PUBLISH, "Process started at: " + time.Now().String(), fmt.Sprintf("devices/%v/start", deviceID), 2}
 		runResult := cmd.Run()
-		mqttMessages <- MQTTMessage{PUBLISH, "Process stopped at: " + time.Now().String(), fmt.Sprintf("devices/%v/stop", deviceID), 2}
+		mqttMessages <- MqttMessage{PUBLISH, "Process stopped at: " + time.Now().String(), fmt.Sprintf("devices/%v/stop", deviceID), 2}
 		ch <- runResult
 	}()
 
@@ -87,7 +87,7 @@ func launchProcessAux(pathToExecutable string, arguments string, inputMessages c
 		} else {
 			currentLine = append(currentLine, bytes...)
 			print(string(currentLine))
-			mqttMessages <- MQTTMessage{PUBLISH, string(currentLine), fmt.Sprintf("devices/%v/stdout", deviceID), 2}
+			mqttMessages <- MqttMessage{PUBLISH, string(currentLine), fmt.Sprintf("devices/%v/stdout", deviceID), 2}
 			currentLine = []byte{}
 		}
 	}
