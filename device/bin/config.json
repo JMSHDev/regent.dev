@@ -1,0 +1,10 @@
+{
+  "PathToExecutable": "./program.exe",
+  "Arguments": "",
+  "AutoRestart": true,
+  "RestartDelayMs": 10000,
+  "DeviceID": "deviceID",
+  "CustomerID": "sample_id",
+  "MQTTAddress": "localhost:1883",
+  "PlatformAddress": "http://localhost"
+}

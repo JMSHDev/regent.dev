@@ -9,7 +9,7 @@ job("Compile agent and ExampleApp") {
     container("golang:buster") {
         shellScript {
             interpreter = "/bin/bash"
-            location = "build_agent.sh"
+            location = "device/build_agent.sh"
         }
     }
 }
