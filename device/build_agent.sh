@@ -1,6 +1,10 @@
+#!/bin/bash
 # this is a script to automate building the agent and ExampleApp
 
 # REQUIREMENTS: You must have Golang 1.15+ installed
+
+SCRIPTPATH="$( cd "$(dirname "$0")" >/dev/null 2>&1 ; pwd -P )"
+cd $SCRIPTPATH
 
 # build the agent and place it in the build directory
 cd agent || exit
