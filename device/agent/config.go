@@ -52,7 +52,7 @@ func saveDefaultConfig() Config {
 		RestartDelayMs:   10000,
 		DeviceID:         "deviceID",
 		CustomerID:       "sample_id",
-		MQTTAddress:      "localhost:8883",
+		MQTTAddress:      "ssl://localhost:8883",
 		PlatformAddress:  "http://localhost",
 		CaPath:           "./ca.crt",
 	}

@@ -53,7 +53,7 @@ func subscribeToMqttServer(mqttCommDetails MqttCommDetails, waitGroup *sync.Wait
 		//}
 
 		// announce that I'm online
-		if token := client.Publish(statusTopic, 2, true, "online"); token.Wait() && token.Error() != nil {
+		if token := client.Publish(statusTopic, 2, true, "{\"status\": \"online\"}"); token.Wait() && token.Error() != nil {
 			log.Fatal(token.Error())
 		}
 	}
@@ -70,7 +70,7 @@ func subscribeToMqttServer(mqttCommDetails MqttCommDetails, waitGroup *sync.Wait
 	opts.SetUsername(mqttCommDetails.username)
 	opts.SetPassword(mqttCommDetails.password)
 	opts.SetMaxReconnectInterval(5 * time.Second)
-	opts.SetWill(statusTopic, "offline", 2, true)
+	opts.SetWill(statusTopic, "{\"status\": \"offline\"}", 2, true)
 
 	rootCAs := createCAPool(mqttCommDetails.caPath)
 	opts.SetTLSConfig(&tls.Config{RootCAs: rootCAs})
@@ -80,6 +80,7 @@ func subscribeToMqttServer(mqttCommDetails MqttCommDetails, waitGroup *sync.Wait
 		c := mqtt.NewClient(opts)
 		if token := c.Connect(); token.Wait() && token.Error() != nil {
 			// fail to connect, have another go in a bit ... TODO: handle quit here
+			fmt.Println(token.Error())
 			time.Sleep(1 * time.Second)
 			continue
 		} else {
@@ -89,7 +90,7 @@ func subscribeToMqttServer(mqttCommDetails MqttCommDetails, waitGroup *sync.Wait
 	}
 }
 
-func clockMQTT(c mqtt.Client, deviceID string, messages chan MqttMessage) {
+func clockMQTT(c mqtt.Client, statusTopic string, messages chan MqttMessage) {
 	defer c.Disconnect(250)
 
 	loop := true
@@ -102,7 +103,7 @@ func clockMQTT(c mqtt.Client, deviceID string, messages chan MqttMessage) {
 					loop = false
 					print("got shutdown message\n")
 				case PUBLISH:
-					c.Publish(fmt.Sprintf("devices/%v/stdout", deviceID), 2, false, m.data)
+					//c.Publish(fmt.Sprintf("devices/%v/stdout", deviceID), 2, false, m.data)
 				}
 			}
 		}
@@ -112,7 +113,7 @@ func clockMQTT(c mqtt.Client, deviceID string, messages chan MqttMessage) {
 	//if token := c.Unsubscribe(fmt.Sprintf("devices/%v/command", deviceID)); token.Wait() && token.Error() != nil {
 	//	log.Fatal(token.Error())
 	//}
-	if token := c.Publish(fmt.Sprintf("devices/%v/status", deviceID), 2, true, "offline"); token.Wait() && token.Error() != nil {
+	if token := c.Publish(statusTopic, 2, true, "{\"status\": \"offline\"}"); token.Wait() && token.Error() != nil {
 		log.Fatal(token.Error())
 	}
 }

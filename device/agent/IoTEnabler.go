@@ -59,7 +59,7 @@ func main() {
 			case sig := <-sigs:
 				log.Print("Exit signal received\n")
 				log.Print(sig)
-				mqttMessages <- MqttMessage{SHUTDOWN, "", "", 2}
+				//mqttMessages <- MqttMessage{SHUTDOWN, "", "", 2}
 				processMessages <- "shutdown"
 				break
 			default:
