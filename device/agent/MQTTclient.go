@@ -37,10 +37,6 @@ const (
 	PUBLISH  = iota
 )
 
-func incomingMqttMessageHandler(_ mqtt.Client, msg mqtt.Message) {
-	fmt.Println(string(msg.Payload()))
-}
-
 func subscribeToMqttServer(
 	mqttCommDetails MqttCommDetails,
 	mqttTopics MqttTopics,
@@ -48,15 +44,15 @@ func subscribeToMqttServer(
 	messages chan MqttMessage,
 ) {
 
-	waitGroup.Add(1) // for the mqtt
-	defer waitGroup.Done()
-	log.Printf("Connecting to MQTT Server %s", mqttCommDetails.Address)
+	incomingMessageHandler := func(_ mqtt.Client, msg mqtt.Message) {
+		fmt.Println(string(msg.Payload()))
+	}
 
-	var mqttConnectHandler mqtt.OnConnectHandler = func(client mqtt.Client) {
+	onConnectHandler := func(client mqtt.Client) {
 		log.Printf("Connected to mqtt server %s", mqttCommDetails.Address)
 
 		// register to receive commands
-		token := client.Subscribe(mqttTopics.CommandTopic, 2, incomingMqttMessageHandler)
+		token := client.Subscribe(mqttTopics.CommandTopic, 2, incomingMessageHandler)
 		if token.Wait() && token.Error() != nil {
 			log.Fatal(token.Error())
 		}
@@ -68,22 +64,24 @@ func subscribeToMqttServer(
 		}
 	}
 
-	var mqttConnLostHandler mqtt.ConnectionLostHandler = func(c mqtt.Client, err error) {
+	onConnectionLostHandler := func(_ mqtt.Client, err error) {
 		log.Printf("Connection lost, reason: %v\n", err)
 	}
+
+	waitGroup.Add(1) // for the mqtt
+	defer waitGroup.Done()
+	log.Printf("Connecting to MQTT Server %s", mqttCommDetails.Address)
 
 	opts := mqtt.NewClientOptions().AddBroker(mqttCommDetails.Address)
 	opts.SetClientID("")
 	opts.SetKeepAlive(10)
-	opts.SetOnConnectHandler(mqttConnectHandler)
-	opts.SetConnectionLostHandler(mqttConnLostHandler)
+	opts.SetOnConnectHandler(onConnectHandler)
+	opts.SetConnectionLostHandler(onConnectionLostHandler)
 	opts.SetUsername(mqttCommDetails.Username)
 	opts.SetPassword(mqttCommDetails.Password)
 	opts.SetMaxReconnectInterval(5 * time.Second)
 	opts.SetWill(mqttTopics.StatusTopic, "{\"status\": \"offline\"}", 2, true)
-
-	rootCAs := createCAPool(mqttCommDetails.CaPath)
-	opts.SetTLSConfig(&tls.Config{RootCAs: rootCAs})
+	opts.SetTLSConfig(&tls.Config{RootCAs: createCAPool(mqttCommDetails.CaPath)})
 
 	// create a client and then clock it until we need to stop
 	for {
