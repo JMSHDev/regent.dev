@@ -58,9 +58,9 @@ func launchProcessAux(pathToExecutable string, arguments string, inputMessages c
 
 	ch := make(chan error)
 	go func() {
-		//funcmqttMessages <- MqttMessage{PUBLISH, "Process started at: " + time.Now().String(), fmt.Sprintf("devices/%v/start", deviceID), 2}
+		//funcmqttMessages <- MqttMessage{PUBLISH, "Process started at: " + time.Now().String(), fmt.Sprintf("devices/%v/start", DeviceId), 2}
 		runResult := cmd.Run()
-		//mqttMessages <- MqttMessage{PUBLISH, "Process stopped at: " + time.Now().String(), fmt.Sprintf("devices/%v/stop", deviceID), 2}
+		//mqttMessages <- MqttMessage{PUBLISH, "Process stopped at: " + time.Now().String(), fmt.Sprintf("devices/%v/stop", DeviceId), 2}
 		ch <- runResult
 	}()
 
@@ -87,7 +87,7 @@ func launchProcessAux(pathToExecutable string, arguments string, inputMessages c
 		} else {
 			currentLine = append(currentLine, bytes...)
 			print(string(currentLine))
-			//mqttMessages <- MqttMessage{PUBLISH, string(currentLine), fmt.Sprintf("devices/%v/stdout", deviceID), 2}
+			//mqttMessages <- MqttMessage{PUBLISH, string(currentLine), fmt.Sprintf("devices/%v/stdout", DeviceId), 2}
 			currentLine = []byte{}
 		}
 	}

@@ -12,19 +12,24 @@ import (
 )
 
 type MqttCommDetails struct {
-	address    string
-	username   string
-	password   string
-	customerID string
-	deviceID   string
-	caPath     string
+	Address    string
+	Username   string
+	Password   string
+	CustomerId string
+	DeviceId   string
+	CaPath     string
+}
+
+type MqttTopics struct {
+	StatusTopic  string
+	CommandTopic string
 }
 
 type MqttMessage struct {
 	MessageType int
-	data        string
-	topic       string
-	qos         int
+	Data        string
+	Topic       string
+	Qos         int
 }
 
 const (
@@ -32,28 +37,33 @@ const (
 	PUBLISH  = iota
 )
 
-func subscribeToMqttServer(mqttCommDetails MqttCommDetails, waitGroup *sync.WaitGroup, messages chan MqttMessage) {
-	statusTopic := fmt.Sprintf("devices/out/%v/%v/state", mqttCommDetails.customerID, mqttCommDetails.deviceID)
-	//commandTopic := fmt.Sprintf("devices/in/%v/%v/command", mqttCommDetails.customerID, mqttCommDetails.deviceID)
+func incomingMqttMessageHandler(_ mqtt.Client, msg mqtt.Message) {
+	fmt.Println(string(msg.Payload()))
+}
+
+func subscribeToMqttServer(
+	mqttCommDetails MqttCommDetails,
+	mqttTopics MqttTopics,
+	waitGroup *sync.WaitGroup,
+	messages chan MqttMessage,
+) {
 
 	waitGroup.Add(1) // for the mqtt
 	defer waitGroup.Done()
-	log.Printf("Connecting to MQTT Server %s", mqttCommDetails.address)
-
-	//var mqttCommandHandler mqtt.MessageHandler = func(client mqtt.Client, msg mqtt.Message) {
-	//	println(string(msg.Payload()))
-	//}
+	log.Printf("Connecting to MQTT Server %s", mqttCommDetails.Address)
 
 	var mqttConnectHandler mqtt.OnConnectHandler = func(client mqtt.Client) {
-		log.Printf("Connected to mqtt server %s", mqttCommDetails.address)
+		log.Printf("Connected to mqtt server %s", mqttCommDetails.Address)
 
 		// register to receive commands
-		//if token := client.Subscribe(commandTopic, 2, mqttCommandHandler); token.Wait() && token.Error() != nil {
-		//	log.Fatal(token.Error())
-		//}
+		token := client.Subscribe(mqttTopics.CommandTopic, 2, incomingMqttMessageHandler)
+		if token.Wait() && token.Error() != nil {
+			log.Fatal(token.Error())
+		}
 
 		// announce that I'm online
-		if token := client.Publish(statusTopic, 2, true, "{\"status\": \"online\"}"); token.Wait() && token.Error() != nil {
+		token = client.Publish(mqttTopics.StatusTopic, 2, true, "{\"status\": \"online\"}")
+		if token.Wait() && token.Error() != nil {
 			log.Fatal(token.Error())
 		}
 	}
@@ -62,17 +72,17 @@ func subscribeToMqttServer(mqttCommDetails MqttCommDetails, waitGroup *sync.Wait
 		log.Printf("Connection lost, reason: %v\n", err)
 	}
 
-	opts := mqtt.NewClientOptions().AddBroker(mqttCommDetails.address)
+	opts := mqtt.NewClientOptions().AddBroker(mqttCommDetails.Address)
 	opts.SetClientID("")
 	opts.SetKeepAlive(10)
 	opts.SetOnConnectHandler(mqttConnectHandler)
 	opts.SetConnectionLostHandler(mqttConnLostHandler)
-	opts.SetUsername(mqttCommDetails.username)
-	opts.SetPassword(mqttCommDetails.password)
+	opts.SetUsername(mqttCommDetails.Username)
+	opts.SetPassword(mqttCommDetails.Password)
 	opts.SetMaxReconnectInterval(5 * time.Second)
-	opts.SetWill(statusTopic, "{\"status\": \"offline\"}", 2, true)
+	opts.SetWill(mqttTopics.StatusTopic, "{\"status\": \"offline\"}", 2, true)
 
-	rootCAs := createCAPool(mqttCommDetails.caPath)
+	rootCAs := createCAPool(mqttCommDetails.CaPath)
 	opts.SetTLSConfig(&tls.Config{RootCAs: rootCAs})
 
 	// create a client and then clock it until we need to stop
@@ -80,17 +90,17 @@ func subscribeToMqttServer(mqttCommDetails MqttCommDetails, waitGroup *sync.Wait
 		c := mqtt.NewClient(opts)
 		if token := c.Connect(); token.Wait() && token.Error() != nil {
 			// fail to connect, have another go in a bit ... TODO: handle quit here
-			fmt.Println(token.Error())
-			time.Sleep(1 * time.Second)
+			fmt.Println("Error connection to MQTT broker: ", token.Error())
+			time.Sleep(5 * time.Second)
 			continue
 		} else {
-			clockMQTT(c, mqttCommDetails.deviceID, messages)
+			clockMQTT(c, mqttTopics, messages)
 			break
 		}
 	}
 }
 
-func clockMQTT(c mqtt.Client, statusTopic string, messages chan MqttMessage) {
+func clockMQTT(c mqtt.Client, mqttTopics MqttTopics, messages chan MqttMessage) {
 	defer c.Disconnect(250)
 
 	loop := true
@@ -101,20 +111,12 @@ func clockMQTT(c mqtt.Client, statusTopic string, messages chan MqttMessage) {
 				switch m.MessageType {
 				case SHUTDOWN:
 					loop = false
-					print("got shutdown message\n")
+					fmt.Println("Got shutdown message.")
 				case PUBLISH:
-					//c.Publish(fmt.Sprintf("devices/%v/stdout", deviceID), 2, false, m.data)
+					c.Publish(mqttTopics.StatusTopic, 2, false, m.Data)
 				}
 			}
 		}
-	}
-
-	// unsubscribe and update status
-	//if token := c.Unsubscribe(fmt.Sprintf("devices/%v/command", deviceID)); token.Wait() && token.Error() != nil {
-	//	log.Fatal(token.Error())
-	//}
-	if token := c.Publish(statusTopic, 2, true, "{\"status\": \"offline\"}"); token.Wait() && token.Error() != nil {
-		log.Fatal(token.Error())
 	}
 }
 

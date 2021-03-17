@@ -13,9 +13,9 @@ type Config struct {
 	Arguments        string
 	AutoRestart      bool
 	RestartDelayMs   int
-	DeviceID         string
-	CustomerID       string
-	MQTTAddress      string
+	DeviceId         string
+	CustomerId       string
+	MqttAddress      string
 	PlatformAddress  string
 	CaPath           string
 }
@@ -50,9 +50,9 @@ func saveDefaultConfig() Config {
 		Arguments:        "",
 		AutoRestart:      true,
 		RestartDelayMs:   10000,
-		DeviceID:         "deviceID",
-		CustomerID:       "sample_id",
-		MQTTAddress:      "ssl://localhost:8883",
+		DeviceId:         "DeviceId",
+		CustomerId:       "sample_id",
+		MqttAddress:      "ssl://localhost:8883",
 		PlatformAddress:  "http://localhost",
 		CaPath:           "./ca.crt",
 	}

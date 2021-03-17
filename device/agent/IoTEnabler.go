@@ -24,29 +24,34 @@ func main() {
 	log.Printf("%v\n", config)
 
 	// TODO: make this asynchronous
-	password := getMqttPassword(config.CustomerID, config.DeviceID, config.PlatformAddress)
+	password := getMqttPassword(config.CustomerId, config.DeviceId, config.PlatformAddress)
 
 	mqttCommDetails := MqttCommDetails{
-		address:    config.MQTTAddress,
-		username:   config.DeviceID,
-		password:   password,
-		customerID: config.CustomerID,
-		deviceID:   config.DeviceID,
-		caPath:     config.CaPath,
+		Address:    config.MqttAddress,
+		Username:   config.DeviceId,
+		Password:   password,
+		CustomerId: config.CustomerId,
+		DeviceId:   config.DeviceId,
+		CaPath:     config.CaPath,
+	}
+
+	mqttTopics := MqttTopics{
+		StatusTopic:  fmt.Sprintf("devices/out/%v/%v/state", config.CustomerId, config.DeviceId),
+		CommandTopic: fmt.Sprintf("devices/in/%v/%v/command", config.CustomerId, config.DeviceId),
 	}
 
 	mqttMessages := make(chan MqttMessage)
 	processMessages := make(chan string)
 	var waitGroup sync.WaitGroup // wait for everything to finish so can safely shutdown
 
-	go subscribeToMqttServer(mqttCommDetails, &waitGroup, mqttMessages)
+	go subscribeToMqttServer(mqttCommDetails, mqttTopics, &waitGroup, mqttMessages)
 	LaunchProcess(config.PathToExecutable,
 		config.Arguments,
 		processMessages,
 		mqttMessages,
 		config.AutoRestart,
 		config.RestartDelayMs,
-		config.DeviceID,
+		config.DeviceId,
 		&waitGroup)
 
 	sigs := make(chan os.Signal, 1)
@@ -87,7 +92,7 @@ func getMqttPassword(customerID string, deviceID string, platformAddress string)
 			}
 		}
 	} else {
-		log.Printf("Loaded platform password from file")
+		log.Printf("Loaded platform Password from file")
 	}
 
 	return password
@@ -123,34 +128,34 @@ func registerWithPlatform(customerId string, deviceId string, platformAddress st
 	if err := json.Unmarshal(body, &dat); err != nil {
 		return "", fmt.Errorf("failure to register - %+v", body)
 	}
-	password := dat["password"].(string)
+	password := dat["Password"].(string)
 
 	fmt.Println(password)
-	// write the password to the password file
+	// write the Password to the Password file
 	err = ioutil.WriteFile("./MQTT_password", []byte(password), 0600)
 	if err != nil {
-		return "", fmt.Errorf("Unable to write password file")
+		return "", fmt.Errorf("Unable to write Password file")
 	}
 
 	// confirm activation
-	jsonStr = []byte(fmt.Sprintf(`{"device_id":"%+v", "password": "%+v"}`, deviceId, password))
+	jsonStr = []byte(fmt.Sprintf(`{"device_id":"%+v", "Password": "%+v"}`, deviceId, password))
 	resp2, err2 := http.Post(activateAddress, "application/json", bytes.NewBuffer(jsonStr))
 	if err2 != nil {
-		// delete the password file, since activation failed
+		// delete the Password file, since activation failed
 		e := os.Remove("./MQTT_password")
 		if e != nil {
 			// bugger! - don't know what to do here
-			return "", fmt.Errorf("failed to activate due to %+v but cannot delete mqtt password file?! %+v", err2, e)
+			return "", fmt.Errorf("failed to activate due to %+v but cannot delete mqtt Password file?! %+v", err2, e)
 		}
 		return "", fmt.Errorf("failure to activate - %+v", err2)
 	}
 	defer resp2.Body.Close()
 	if !(resp2.StatusCode >= 200 && resp2.StatusCode < 300) {
-		// delete the password file, since activation failed
+		// delete the Password file, since activation failed
 		e := os.Remove("./MQTT_password")
 		if e != nil {
 			// bugger! - don't know what to do here
-			return "", fmt.Errorf("failed to activate due to none 200 response %+v, but cannot delete mqtt password file?! %+v", resp2.StatusCode, e)
+			return "", fmt.Errorf("failed to activate due to none 200 response %+v, but cannot delete mqtt Password file?! %+v", resp2.StatusCode, e)
 		}
 
 		return "", fmt.Errorf("failed to activate due to none 200 response %+v", resp2.StatusCode)
