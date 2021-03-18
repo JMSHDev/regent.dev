@@ -35,23 +35,17 @@ func main() {
 		CaPath:     config.CaPath,
 	}
 
-	mqttTopics := MqttTopics{
-		StatusTopic:  fmt.Sprintf("devices/out/%v/%v/state", config.CustomerId, config.DeviceId),
-		CommandTopic: fmt.Sprintf("devices/in/%v/%v/command", config.CustomerId, config.DeviceId),
-	}
-
 	mqttMessages := make(chan MqttMessage)
 	processMessages := make(chan string)
 	var waitGroup sync.WaitGroup // wait for everything to finish so can safely shutdown
 
-	go subscribeToMqttServer(mqttCommDetails, mqttTopics, &waitGroup, mqttMessages)
+	go subscribeToMqttServer(mqttCommDetails, config.CustomerId, config.DeviceId, &waitGroup, mqttMessages)
 	LaunchProcess(config.PathToExecutable,
 		config.Arguments,
 		processMessages,
 		mqttMessages,
 		config.AutoRestart,
 		config.RestartDelayMs,
-		config.DeviceId,
 		&waitGroup)
 
 	sigs := make(chan os.Signal, 1)
@@ -64,7 +58,7 @@ func main() {
 			case sig := <-sigs:
 				log.Print("Exit signal received\n")
 				log.Print(sig)
-				//mqttMessages <- MqttMessage{SHUTDOWN, "", "", 2}
+				mqttMessages <- MqttMessage{SHUTDOWN, "", "", 2}
 				processMessages <- "shutdown"
 				break
 			default:

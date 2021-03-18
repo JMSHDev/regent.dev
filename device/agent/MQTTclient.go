@@ -20,15 +20,10 @@ type MqttCommDetails struct {
 	CaPath     string
 }
 
-type MqttTopics struct {
-	StatusTopic  string
-	CommandTopic string
-}
-
 type MqttMessage struct {
 	MessageType int
 	Data        string
-	Topic       string
+	TopicSuffix string
 	Qos         int
 }
 
@@ -39,10 +34,17 @@ const (
 
 func subscribeToMqttServer(
 	mqttCommDetails MqttCommDetails,
-	mqttTopics MqttTopics,
+	customerId string,
+	deviceId string,
 	waitGroup *sync.WaitGroup,
 	messages chan MqttMessage,
 ) {
+
+	publishTopicPrefix := fmt.Sprintf("devices/out/%v/%v/", customerId, deviceId)
+	subscribeTopicPrefix := fmt.Sprintf("devices/in/%v/%v/", customerId, deviceId)
+
+	commandTopic := subscribeTopicPrefix + "command"
+	stateTopic := publishTopicPrefix + "state"
 
 	incomingMessageHandler := func(_ mqtt.Client, msg mqtt.Message) {
 		fmt.Println(string(msg.Payload()))
@@ -52,13 +54,13 @@ func subscribeToMqttServer(
 		log.Printf("Connected to mqtt server %s", mqttCommDetails.Address)
 
 		// register to receive commands
-		token := client.Subscribe(mqttTopics.CommandTopic, 2, incomingMessageHandler)
+		token := client.Subscribe(commandTopic, 2, incomingMessageHandler)
 		if token.Wait() && token.Error() != nil {
 			log.Fatal(token.Error())
 		}
 
 		// announce that I'm online
-		token = client.Publish(mqttTopics.StatusTopic, 2, true, "{\"status\": \"online\"}")
+		token = client.Publish(stateTopic, 2, true, "{\"status\": \"online\"}")
 		if token.Wait() && token.Error() != nil {
 			log.Fatal(token.Error())
 		}
@@ -80,7 +82,7 @@ func subscribeToMqttServer(
 	opts.SetUsername(mqttCommDetails.Username)
 	opts.SetPassword(mqttCommDetails.Password)
 	opts.SetMaxReconnectInterval(5 * time.Second)
-	opts.SetWill(mqttTopics.StatusTopic, "{\"status\": \"offline\"}", 2, true)
+	opts.SetWill(stateTopic, "{\"status\": \"offline\"}", 2, true)
 	opts.SetTLSConfig(&tls.Config{RootCAs: createCAPool(mqttCommDetails.CaPath)})
 
 	// create a client and then clock it until we need to stop
@@ -92,13 +94,13 @@ func subscribeToMqttServer(
 			time.Sleep(5 * time.Second)
 			continue
 		} else {
-			clockMQTT(c, mqttTopics, messages)
+			clockMQTT(c, publishTopicPrefix, subscribeTopicPrefix, messages)
 			break
 		}
 	}
 }
 
-func clockMQTT(c mqtt.Client, mqttTopics MqttTopics, messages chan MqttMessage) {
+func clockMQTT(c mqtt.Client, publishTopicPrefix string, subscribeTopicPrefix string, messages chan MqttMessage) {
 	defer c.Disconnect(250)
 
 	loop := true
@@ -111,10 +113,21 @@ func clockMQTT(c mqtt.Client, mqttTopics MqttTopics, messages chan MqttMessage) 
 					loop = false
 					fmt.Println("Got shutdown message.")
 				case PUBLISH:
-					c.Publish(mqttTopics.StatusTopic, 2, false, m.Data)
+					c.Publish(publishTopicPrefix+m.TopicSuffix, 2, false, m.Data)
 				}
 			}
 		}
+	}
+
+	// unsubscribe and update status
+	token := c.Unsubscribe(subscribeTopicPrefix + "command")
+	if token.Wait() && token.Error() != nil {
+		log.Fatal(token.Error())
+	}
+
+	token = c.Publish(publishTopicPrefix+"state", 2, true, "{\"status\": \"offline\"}")
+	if token.Wait() && token.Error() != nil {
+		log.Fatal(token.Error())
 	}
 }
 

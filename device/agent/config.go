@@ -46,11 +46,11 @@ func saveDefaultConfig() Config {
 	defer f.Close()
 
 	defaultConfig := Config{
-		PathToExecutable: "./program.exe",
+		PathToExecutable: "./ExampleApp",
 		Arguments:        "",
 		AutoRestart:      true,
 		RestartDelayMs:   10000,
-		DeviceId:         "DeviceId",
+		DeviceId:         "deviceID",
 		CustomerId:       "sample_id",
 		MqttAddress:      "ssl://localhost:8883",
 		PlatformAddress:  "http://localhost",

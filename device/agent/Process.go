@@ -18,14 +18,13 @@ func LaunchProcess(
 	mqttMessages chan MqttMessage,
 	autoRestart bool,
 	restartDelayMs int,
-	deviceID string,
 	waitGroup *sync.WaitGroup) {
 	waitGroup.Add(1)
 	go func() {
 		defer waitGroup.Done()
 
 		for {
-			exitNow := launchProcessAux(pathToExecutable, arguments, inputMessages, mqttMessages, deviceID)
+			exitNow := launchProcessAux(pathToExecutable, arguments, inputMessages, mqttMessages)
 			if exitNow {
 				break
 			}
@@ -40,7 +39,13 @@ func LaunchProcess(
 	}()
 }
 
-func launchProcessAux(pathToExecutable string, arguments string, inputMessages chan string, mqttMessages chan MqttMessage, deviceID string) bool {
+func launchProcessAux(
+	pathToExecutable string,
+	arguments string,
+	inputMessages chan string,
+	mqttMessages chan MqttMessage,
+) bool {
+
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
@@ -58,9 +63,11 @@ func launchProcessAux(pathToExecutable string, arguments string, inputMessages c
 
 	ch := make(chan error)
 	go func() {
-		//funcmqttMessages <- MqttMessage{PUBLISH, "Process started at: " + time.Now().String(), fmt.Sprintf("devices/%v/start", DeviceId), 2}
+		messageStart := "Process started at: " + time.Now().String()
+		mqttMessages <- MqttMessage{PUBLISH, messageStart, "start", 2}
 		runResult := cmd.Run()
-		//mqttMessages <- MqttMessage{PUBLISH, "Process stopped at: " + time.Now().String(), fmt.Sprintf("devices/%v/stop", DeviceId), 2}
+		messageStop := "Process stopped at: " + time.Now().String()
+		mqttMessages <- MqttMessage{PUBLISH, messageStop, "stop", 2}
 		ch <- runResult
 	}()
 
@@ -73,7 +80,7 @@ func launchProcessAux(pathToExecutable string, arguments string, inputMessages c
 			return false
 		case command := <-inputMessages:
 			if command == "shutdown" {
-				print("shutdown process now\n")
+				fmt.Println("Shutdown process now.")
 				return true
 			}
 		default:
@@ -86,8 +93,7 @@ func launchProcessAux(pathToExecutable string, arguments string, inputMessages c
 			break // some other nasty error
 		} else {
 			currentLine = append(currentLine, bytes...)
-			print(string(currentLine))
-			//mqttMessages <- MqttMessage{PUBLISH, string(currentLine), fmt.Sprintf("devices/%v/stdout", DeviceId), 2}
+			mqttMessages <- MqttMessage{PUBLISH, string(currentLine), "stdout", 2}
 			currentLine = []byte{}
 		}
 	}
