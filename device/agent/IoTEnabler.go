@@ -122,7 +122,7 @@ func registerWithPlatform(customerId string, deviceId string, platformAddress st
 	if err := json.Unmarshal(body, &dat); err != nil {
 		return "", fmt.Errorf("failure to register - %+v", body)
 	}
-	password := dat["Password"].(string)
+	password := dat["password"].(string)
 
 	fmt.Println(password)
 	// write the Password to the Password file
@@ -132,7 +132,7 @@ func registerWithPlatform(customerId string, deviceId string, platformAddress st
 	}
 
 	// confirm activation
-	jsonStr = []byte(fmt.Sprintf(`{"device_id":"%+v", "Password": "%+v"}`, deviceId, password))
+	jsonStr = []byte(fmt.Sprintf(`{"device_id":"%+v", "password": "%+v"}`, deviceId, password))
 	resp2, err2 := http.Post(activateAddress, "application/json", bytes.NewBuffer(jsonStr))
 	if err2 != nil {
 		// delete the Password file, since activation failed

@@ -1,10 +1,12 @@
 package main
 
-type StateData struct{
-	AgentStatus string
+import "fmt"
+
+type StateData struct {
+	AgentStatus   string
 	ProgramStatus string
 }
-//
-//func (*StateData) ToJson() string {
-//
-//}
+
+func (s *StateData) ToJson() string {
+	return fmt.Sprintf("{\"agentStatus\": \"%v\", \"programStatus\": \"%v\"}", s.AgentStatus, s.ProgramStatus)
+}

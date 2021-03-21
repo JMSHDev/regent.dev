@@ -63,11 +63,19 @@ func launchProcessAux(
 
 	ch := make(chan error)
 	go func() {
-		messageStart := "Process started at: " + time.Now().String()
-		mqttMessages <- MqttMessage{PUBLISH, messageStart, "supervisor", 2}
+		supervisorMessageStart := "Process started at: " + time.Now().String()
+		mqttMessages <- MqttMessage{PUBLISH, supervisorMessageStart, "supervisor", 2}
+
+		stateMessageStart := (&StateData{"online", "up"}).ToJson()
+		mqttMessages <- MqttMessage{PUBLISH, stateMessageStart, "state", 2}
+
 		runResult := cmd.Run()
-		messageStop := "Process stopped at: " + time.Now().String()
-		mqttMessages <- MqttMessage{PUBLISH, messageStop, "supervisor", 2}
+
+		stateMessageStop := (&StateData{"online", "down"}).ToJson()
+		mqttMessages <- MqttMessage{PUBLISH, stateMessageStop, "state", 2}
+
+		supervisorMessageStop := "Process stopped at: " + time.Now().String()
+		mqttMessages <- MqttMessage{PUBLISH, supervisorMessageStop, "supervisor", 2}
 		ch <- runResult
 	}()
 
