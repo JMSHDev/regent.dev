@@ -64,10 +64,10 @@ func launchProcessAux(
 	ch := make(chan error)
 	go func() {
 		messageStart := "Process started at: " + time.Now().String()
-		mqttMessages <- MqttMessage{PUBLISH, messageStart, "start", 2}
+		mqttMessages <- MqttMessage{PUBLISH, messageStart, "supervisor", 2}
 		runResult := cmd.Run()
 		messageStop := "Process stopped at: " + time.Now().String()
-		mqttMessages <- MqttMessage{PUBLISH, messageStop, "stop", 2}
+		mqttMessages <- MqttMessage{PUBLISH, messageStop, "supervisor", 2}
 		ch <- runResult
 	}()
 
@@ -93,7 +93,7 @@ func launchProcessAux(
 			break // some other nasty error
 		} else {
 			currentLine = append(currentLine, bytes...)
-			mqttMessages <- MqttMessage{PUBLISH, string(currentLine), "stdout", 2}
+			mqttMessages <- MqttMessage{PUBLISH, string(currentLine), "supervisor", 2}
 			currentLine = []byte{}
 		}
 	}

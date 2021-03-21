@@ -22,7 +22,8 @@ def update(data):
     except ObjectDoesNotExist as exp:
         return {"success": False, "content": f"Device {device_name} not in database."}
 
-    device.status = state_json["status"]
+    device.agent_status = state_json["agentStatus"]
+    device.program_status = state_json["programStatus"]
     device.save()
 
     telemetry = Telemetry(device=device, state=state_json)

@@ -8,8 +8,8 @@ class DeviceSerializer(serializers.HyperlinkedModelSerializer):
 
     class Meta:
         model = Device
-        fields = ["url", "name", "customer", "status", "last_updated", "auth"]
-        read_only_fields = ["name", "customer", "status", "last_updated"]
+        fields = ["url", "name", "customer", "agent_status", "program_status", "last_updated", "auth"]
+        read_only_fields = ["name", "customer", "agent_status", "program_status", "last_updated"]
 
 
 class RegisterDeviceSerializer(serializers.Serializer):

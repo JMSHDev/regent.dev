@@ -60,7 +60,7 @@ func subscribeToMqttServer(
 		}
 
 		// announce that I'm online
-		token = client.Publish(stateTopic, 2, true, "{\"status\": \"online\"}")
+		token = client.Publish(stateTopic, 2, true, "{\"agent_status\": \"online\"}")
 		if token.Wait() && token.Error() != nil {
 			log.Fatal(token.Error())
 		}
@@ -82,7 +82,7 @@ func subscribeToMqttServer(
 	opts.SetUsername(mqttCommDetails.Username)
 	opts.SetPassword(mqttCommDetails.Password)
 	opts.SetMaxReconnectInterval(5 * time.Second)
-	opts.SetWill(stateTopic, "{\"status\": \"offline\"}", 2, true)
+	opts.SetWill(stateTopic, "{\"agent_status\": \"offline\"}", 2, true)
 	opts.SetTLSConfig(&tls.Config{RootCAs: createCAPool(mqttCommDetails.CaPath)})
 
 	// create a client and then clock it until we need to stop
@@ -119,13 +119,13 @@ func clockMQTT(c mqtt.Client, publishTopicPrefix string, subscribeTopicPrefix st
 		}
 	}
 
-	// unsubscribe and update status
+	// unsubscribe and update agent_status
 	token := c.Unsubscribe(subscribeTopicPrefix + "command")
 	if token.Wait() && token.Error() != nil {
 		log.Fatal(token.Error())
 	}
 
-	token = c.Publish(publishTopicPrefix+"state", 2, true, "{\"status\": \"offline\"}")
+	token = c.Publish(publishTopicPrefix+"state", 2, true, "{\"agent_status\": \"offline\"}")
 	if token.Wait() && token.Error() != nil {
 		log.Fatal(token.Error())
 	}

@@ -2,7 +2,15 @@
   <NavBar />
   <div class="container">
     <h1>{{ state.device.name }}</h1>
-    <h4 :class="state.device.status === 'online' ? 'text-success' : 'text-danger'">{{ state.device.status }}</h4>
+    <h4 :class="state.device.agentStatus === 'online' ? 'text-success' : 'text-danger'">
+      {{ state.device.agentStatus }}
+    </h4>
+    <p v-if="state.device.agentStatus === 'online'">
+      Program status:
+      <span :class="state.device.programStatus === 'up' ? 'text-success' : 'text-danger'">{{
+        state.device.programStatus
+      }}</span>
+    </p>
     <p>Last updated: {{ state.device.lastUpdated }}</p>
     <p>Activated: {{ state.device.activated }}</p>
     <router-link class="btn btn-primary" :to="{ name: 'Devices' }">Back to list</router-link>
@@ -11,7 +19,7 @@
       <p>To get device's telemetry use the <a :href="telemetryApi">telemetry API</a>.</p>
       <p>
         For example to get telemetry between 2021/02/10 and 2021/02/12 use GET
-        <a :href="telemetryExample + state.device.name">{{ telemetryExample + state.device.name}}</a>
+        <a :href="telemetryExample + state.device.name">{{ telemetryExample + state.device.name }}</a>
       </p>
       <p>
         To browse the API you have to login as admin. To use the API from an external application you need to add the
