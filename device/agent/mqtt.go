@@ -46,7 +46,7 @@ const (
 	MqttEmpty    = iota
 )
 
-func GetPasswordAndSubscribeToMqttServer(
+func getPasswordAndSubscribeToMqttServer(
 	mqttConfig MqttConfig,
 	waitGroup *sync.WaitGroup,
 	mqttMessages chan MqttMessage,
@@ -56,8 +56,12 @@ func GetPasswordAndSubscribeToMqttServer(
 	defer waitGroup.Done()
 
 	password := getMqttPassword(mqttConfig.CustomerId, mqttConfig.DeviceId, mqttConfig.PlatformAddress)
+	caPool, err := createCaPool(mqttConfig.CaPath)
+	if err != nil {
+		return
+	}
 
-	subscribeToMqttServer(mqttConfig, password, mqttMessages, processMessages)
+	subscribeToMqttServer(mqttConfig, password, caPool, mqttMessages, processMessages)
 }
 
 func getMqttPassword(customerID string, deviceID string, platformAddress string) string {
@@ -136,6 +140,7 @@ func registerWithPlatform(customerId string, deviceId string, platformAddress st
 func subscribeToMqttServer(
 	mqttConfig MqttConfig,
 	mqttPassword string,
+	caPool *x509.CertPool,
 	mqttMessages chan MqttMessage,
 	processMessages chan ProcessMessage,
 ) {
@@ -189,7 +194,7 @@ func subscribeToMqttServer(
 	opts.SetPassword(mqttPassword)
 	opts.SetMaxReconnectInterval(5 * time.Second)
 	opts.SetWill(stateTopic, mqttPayloadOffline, 2, true)
-	opts.SetTLSConfig(&tls.Config{RootCAs: createCAPool(mqttConfig.CaPath)})
+	opts.SetTLSConfig(&tls.Config{RootCAs: caPool})
 
 	// create a client and then clock it until we need to stop
 	for {
@@ -238,17 +243,18 @@ func clockMqtt(c mqtt.Client, publishTopicPrefix string, subscribeTopicPrefix st
 	}
 }
 
-func createCAPool(caPath string) *x509.CertPool {
+func createCaPool(caPath string) (*x509.CertPool, error) {
+	rootCAs := x509.NewCertPool()
+
 	caCrtPem, err := ioutil.ReadFile(caPath)
 	if err != nil {
-		panic("Failed to read CA certificate")
+		return rootCAs, fmt.Errorf("failed to read CA certificate")
 	}
 
-	rootCAs := x509.NewCertPool()
 	ok := rootCAs.AppendCertsFromPEM(caCrtPem)
 	if !ok {
-		panic("Failed to parse root certificate")
+		return rootCAs, fmt.Errorf("failed to parse root certificate")
 	}
 
-	return rootCAs
+	return rootCAs, nil
 }

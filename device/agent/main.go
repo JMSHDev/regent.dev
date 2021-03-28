@@ -19,9 +19,8 @@ func main() {
 	processMessages := make(chan ProcessMessage, 100)
 	var waitGroup sync.WaitGroup // wait for everything to finish so can safely shutdown
 
-	go GetPasswordAndSubscribeToMqttServer(mqttConfig, &waitGroup, mqttMessages, processMessages)
-
-	go LaunchProcess(processConfig, processMessages, mqttMessages, &waitGroup)
+	go getPasswordAndSubscribeToMqttServer(mqttConfig, &waitGroup, mqttMessages, processMessages)
+	go launchProcess(processConfig, processMessages, mqttMessages, &waitGroup)
 
 	sigs := make(chan os.Signal, 1)
 	signal.Notify(sigs, syscall.SIGINT, syscall.SIGTERM)

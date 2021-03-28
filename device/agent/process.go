@@ -31,7 +31,7 @@ const (
 	ProcessEmpty     = iota
 )
 
-func LaunchProcess(
+func launchProcess(
 	processConfig ProcessConfig,
 	processMessages chan ProcessMessage,
 	mqttMessages chan MqttMessage,
