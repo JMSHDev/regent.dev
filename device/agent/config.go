@@ -20,11 +20,27 @@ type Config struct {
 	CaPath           string
 }
 
-func loadConfig() (Config, error) {
+type ProcessConfig struct {
+	PathToExecutable string
+	Arguments        string
+	AutoRestart      bool
+	RestartDelayMs   int
+}
+
+type MqttConfig struct {
+	MqttAddress     string
+	PlatformAddress string
+	Username        string
+	CustomerId      string
+	DeviceId        string
+	CaPath          string
+}
+
+func loadConfig() (MqttConfig, ProcessConfig, error) {
 	f, err := os.Open("config.json")
 	if err != nil {
 		//no valid config found - make a new one and return it
-		return Config{}, err
+		return MqttConfig{}, ProcessConfig{}, err
 	}
 	defer f.Close()
 
@@ -35,7 +51,24 @@ func loadConfig() (Config, error) {
 	if jsonErr != nil {
 		log.Printf("%v\n", jsonErr)
 	}
-	return config, nil
+
+	mqttConfig := MqttConfig{
+		MqttAddress:     config.MqttAddress,
+		PlatformAddress: config.PlatformAddress,
+		Username:        config.DeviceId,
+		CustomerId:      config.CustomerId,
+		DeviceId:        config.DeviceId,
+		CaPath:          config.CaPath,
+	}
+
+	processConfig := ProcessConfig{
+		PathToExecutable: config.PathToExecutable,
+		Arguments:        config.Arguments,
+		AutoRestart:      config.AutoRestart,
+		RestartDelayMs:   config.RestartDelayMs,
+	}
+
+	return mqttConfig, processConfig, nil
 }
 
 func saveDefaultConfig() Config {

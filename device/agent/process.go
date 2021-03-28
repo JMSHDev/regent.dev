@@ -11,25 +11,18 @@ import (
 	"time"
 )
 
-type ProcessConfig struct {
-	PathToExecutable string
-	Arguments        string
-	AutoRestart      bool
-	RestartDelayMs   int
-}
-
 type ProcessMessage struct {
 	MessageType int
 	Message     string
 }
 
-func (m *ProcessMessage) ProcessSendMessage(ch chan ProcessMessage, timeoutMilSec int) {
+func (m *ProcessMessage) processSendMessage(ch chan ProcessMessage) {
 	select {
 	case ch <- *m:
 		// message sent
-	case <-time.After(time.Duration(timeoutMilSec) * time.Millisecond):
-		fmt.Printf("Process message %v of type %v could not be sent.\n", m.Message, m.MessageType)
+	default:
 	}
+	return
 }
 
 const (
@@ -90,25 +83,38 @@ func launchProcessAux(
 		log.Fatal(err)
 	}
 
-	ch := make(chan error)
+	errorChannel := make(chan error)
 	go func() {
+		stateMessageStart := MqttMessage{
+			MqttPublish,
+			(&StateData{"online", "up"}).toJson(),
+			"state",
+			2}
+		stateMessageStart.mqttSendMessage(mqttMessages)
+
+		supervisorMessageStart := MqttMessage{
+			MqttPublish,
+			"Process started at: " + time.Now().String(),
+			"supervisor",
+			2}
+		supervisorMessageStart.mqttSendMessage(mqttMessages)
 		runResult := cmd.Run()
 
 		stateMessageStop := MqttMessage{
 			MqttPublish,
-			(&StateData{"online", "down"}).ToJson(),
+			(&StateData{"online", "down"}).toJson(),
 			"state",
 			2}
-		stateMessageStop.MqttSendMessage(mqttMessages, 2000)
+		stateMessageStop.mqttSendMessage(mqttMessages)
 
 		supervisorMessageStop := MqttMessage{
 			MqttPublish,
 			"Process stopped at: " + time.Now().String(),
 			"supervisor",
 			2}
-		supervisorMessageStop.MqttSendMessage(mqttMessages, 2000)
+		supervisorMessageStop.mqttSendMessage(mqttMessages)
 
-		ch <- runResult
+		errorChannel <- runResult
 	}()
 
 	buf := bufio.NewReader(out) // Notice that this is not in a loop
@@ -116,7 +122,7 @@ func launchProcessAux(
 
 	for {
 		select {
-		case <-ch:
+		case <-errorChannel:
 			return false
 		case processMessage := <-processMessages:
 			if processMessage.MessageType == ProcessShutdown {
@@ -126,17 +132,17 @@ func launchProcessAux(
 			if processMessage.MessageType == ProcessPushState {
 				stateMessageStart := MqttMessage{
 					MqttPublish,
-					(&StateData{"online", "up"}).ToJson(),
+					(&StateData{"online", "up"}).toJson(),
 					"state",
 					2}
-				stateMessageStart.MqttSendMessage(mqttMessages, 2000)
+				stateMessageStart.mqttSendMessage(mqttMessages)
 
 				supervisorMessageStart := MqttMessage{
 					MqttPublish,
 					"Process started at: " + time.Now().String(),
 					"supervisor",
 					2}
-				supervisorMessageStart.MqttSendMessage(mqttMessages, 2000)
+				supervisorMessageStart.mqttSendMessage(mqttMessages)
 			}
 		default:
 		}
@@ -153,7 +159,7 @@ func launchProcessAux(
 				string(currentLine),
 				"supervisor",
 				2}
-			supervisorMessage.MqttSendMessage(mqttMessages, 2000)
+			supervisorMessage.mqttSendMessage(mqttMessages)
 			currentLine = []byte{}
 		}
 	}
