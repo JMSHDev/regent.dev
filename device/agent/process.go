@@ -23,7 +23,7 @@ type ProcessMessage struct {
 	Message     string
 }
 
-func (m *ProcessMessage) SendMessageWithTimeout(ch chan ProcessMessage, timeoutMilSec int) {
+func (m *ProcessMessage) ProcessSendMessage(ch chan ProcessMessage, timeoutMilSec int) {
 	select {
 	case ch <- *m:
 		// message sent
@@ -32,9 +32,21 @@ func (m *ProcessMessage) SendMessageWithTimeout(ch chan ProcessMessage, timeoutM
 	}
 }
 
+func ProcessReadMessage(ch chan ProcessMessage, timeoutMilSec int) ProcessMessage {
+	select {
+	case m := <-ch:
+		// message read
+		return m
+	case <-time.After(time.Duration(timeoutMilSec) * time.Millisecond):
+		fmt.Printf("No message received from channel.\n")
+		return ProcessMessage{ProcessEmpty, ""}
+	}
+}
+
 const (
 	ProcessShutdown  = iota
 	ProcessPushState = iota
+	ProcessEmpty     = iota
 )
 
 func LaunchProcess(
@@ -98,14 +110,14 @@ func launchProcessAux(
 			(&StateData{"online", "down"}).ToJson(),
 			"state",
 			2}
-		stateMessageStop.SendMessageWithTimeout(mqttMessages, 2000)
+		stateMessageStop.MqttSendMessage(mqttMessages, 2000)
 
 		supervisorMessageStop := MqttMessage{
 			MqttPublish,
 			"Process stopped at: " + time.Now().String(),
 			"supervisor",
 			2}
-		supervisorMessageStop.SendMessageWithTimeout(mqttMessages, 2000)
+		supervisorMessageStop.MqttSendMessage(mqttMessages, 2000)
 
 		ch <- runResult
 	}()
@@ -128,14 +140,14 @@ func launchProcessAux(
 					(&StateData{"online", "up"}).ToJson(),
 					"state",
 					2}
-				stateMessageStart.SendMessageWithTimeout(mqttMessages, 2000)
+				stateMessageStart.MqttSendMessage(mqttMessages, 2000)
 
 				supervisorMessageStart := MqttMessage{
 					MqttPublish,
 					"Process started at: " + time.Now().String(),
 					"supervisor",
 					2}
-				supervisorMessageStart.SendMessageWithTimeout(mqttMessages, 2000)
+				supervisorMessageStart.MqttSendMessage(mqttMessages, 2000)
 			}
 		default:
 		}
@@ -152,7 +164,7 @@ func launchProcessAux(
 				string(currentLine),
 				"supervisor",
 				2}
-			supervisorMessage.SendMessageWithTimeout(mqttMessages, 2000)
+			supervisorMessage.MqttSendMessage(mqttMessages, 2000)
 			currentLine = []byte{}
 		}
 	}

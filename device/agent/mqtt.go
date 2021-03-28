@@ -18,12 +18,23 @@ type MqttMessage struct {
 	Qos         int
 }
 
-func (m *MqttMessage) SendMessageWithTimeout(ch chan MqttMessage, timeoutMilSec int) {
+func (m *MqttMessage) MqttSendMessage(ch chan MqttMessage, timeoutMilSec int) {
 	select {
 	case ch <- *m:
 		// message sent
 	case <-time.After(time.Duration(timeoutMilSec) * time.Millisecond):
 		fmt.Printf("MQTT message %v to topic %v could not be sent.\n", m.Data, m.TopicSuffix)
+	}
+}
+
+func MqttReadMessage(ch chan MqttMessage, timeoutMilSec int) MqttMessage {
+	select {
+	case m := <-ch:
+		// message read
+		return m
+	case <-time.After(time.Duration(timeoutMilSec) * time.Millisecond):
+		fmt.Printf("No message received from channel.\n")
+		return MqttMessage{MqttEmpty, "", "", -1}
 	}
 }
 
@@ -48,6 +59,7 @@ type MqttCommDetails struct {
 const (
 	MqttShutdown = iota
 	MqttPublish  = iota
+	MqttEmpty    = iota
 )
 
 func subscribeToMqttServer(
@@ -86,6 +98,11 @@ func subscribeToMqttServer(
 		if token.Wait() && token.Error() != nil {
 			log.Fatal(token.Error())
 		}
+
+		// send information to process to send its state
+		processMessage := ProcessMessage{ProcessPushState, ""}
+		processMessage.ProcessSendMessage(processMessages, 500)
+
 	}
 
 	onConnectionLostHandler := func(_ mqtt.Client, err error) {
