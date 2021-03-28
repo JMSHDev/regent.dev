@@ -27,17 +27,6 @@ func (m *MqttMessage) MqttSendMessage(ch chan MqttMessage, timeoutMilSec int) {
 	}
 }
 
-func MqttReadMessage(ch chan MqttMessage, timeoutMilSec int) MqttMessage {
-	select {
-	case m := <-ch:
-		// message read
-		return m
-	case <-time.After(time.Duration(timeoutMilSec) * time.Millisecond):
-		fmt.Printf("No message received from channel.\n")
-		return MqttMessage{MqttEmpty, "", "", -1}
-	}
-}
-
 type StateData struct {
 	AgentStatus   string
 	ProgramStatus string

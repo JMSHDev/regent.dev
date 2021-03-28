@@ -32,17 +32,6 @@ func (m *ProcessMessage) ProcessSendMessage(ch chan ProcessMessage, timeoutMilSe
 	}
 }
 
-func ProcessReadMessage(ch chan ProcessMessage, timeoutMilSec int) ProcessMessage {
-	select {
-	case m := <-ch:
-		// message read
-		return m
-	case <-time.After(time.Duration(timeoutMilSec) * time.Millisecond):
-		fmt.Printf("No message received from channel.\n")
-		return ProcessMessage{ProcessEmpty, ""}
-	}
-}
-
 const (
 	ProcessShutdown  = iota
 	ProcessPushState = iota
