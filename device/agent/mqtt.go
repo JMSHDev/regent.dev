@@ -11,6 +11,31 @@ import (
 	"time"
 )
 
+type MqttMessage struct {
+	MessageType int
+	Data        string
+	TopicSuffix string
+	Qos         int
+}
+
+func (m *MqttMessage) SendMessageWithTimeout(ch chan MqttMessage, timeoutMilSec int) {
+	select {
+	case ch <- *m:
+		// message sent
+	case <-time.After(time.Duration(timeoutMilSec) * time.Millisecond):
+		fmt.Printf("MQTT message %v to topic %v could not be sent.\n", m.Data, m.TopicSuffix)
+	}
+}
+
+type StateData struct {
+	AgentStatus   string
+	ProgramStatus string
+}
+
+func (s *StateData) ToJson() string {
+	return fmt.Sprintf("{\"agentStatus\": \"%v\", \"programStatus\": \"%v\"}", s.AgentStatus, s.ProgramStatus)
+}
+
 type MqttCommDetails struct {
 	Address    string
 	Username   string
@@ -20,16 +45,9 @@ type MqttCommDetails struct {
 	CaPath     string
 }
 
-type MqttMessage struct {
-	MessageType int
-	Data        string
-	TopicSuffix string
-	Qos         int
-}
-
 const (
-	SHUTDOWN = iota
-	PUBLISH  = iota
+	MqttShutdown = iota
+	MqttPublish  = iota
 )
 
 func subscribeToMqttServer(
@@ -37,7 +55,8 @@ func subscribeToMqttServer(
 	customerId string,
 	deviceId string,
 	waitGroup *sync.WaitGroup,
-	messages chan MqttMessage,
+	mqttMessages chan MqttMessage,
+	processMessages chan ProcessMessage,
 ) {
 
 	publishTopicPrefix := fmt.Sprintf("devices/out/%v/%v/", customerId, deviceId)
@@ -97,7 +116,7 @@ func subscribeToMqttServer(
 			time.Sleep(5 * time.Second)
 			continue
 		} else {
-			clockMQTT(c, publishTopicPrefix, subscribeTopicPrefix, messages)
+			clockMQTT(c, publishTopicPrefix, subscribeTopicPrefix, mqttMessages)
 			break
 		}
 	}
@@ -112,10 +131,10 @@ func clockMQTT(c mqtt.Client, publishTopicPrefix string, subscribeTopicPrefix st
 		case m := <-messages:
 			{
 				switch m.MessageType {
-				case SHUTDOWN:
+				case MqttShutdown:
 					loop = false
 					fmt.Println("Got shutdown message.")
-				case PUBLISH:
+				case MqttPublish:
 					c.Publish(publishTopicPrefix+m.TopicSuffix, 2, false, m.Data)
 				}
 			}
