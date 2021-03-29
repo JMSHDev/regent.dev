@@ -25,22 +25,13 @@ func main() {
 	sigs := make(chan os.Signal, 1)
 	signal.Notify(sigs, syscall.SIGINT, syscall.SIGTERM)
 
-	go func() {
-		for {
-			// check to see if we need to quit
-			select {
-			case sig := <-sigs:
-				log.Print("Exit signal received\n")
-				log.Print(sig)
-				mqttMessage := MqttMessage{MqttShutdown, "", "", 2}
-				mqttMessage.mqttSendMessage(mqttMessages)
-				processMessage := ProcessMessage{ProcessShutdown, ""}
-				processMessage.processSendMessage(processMessages)
-				break
-			default:
-			}
-		}
-	}()
+	sig := <-sigs
+	log.Print("Exit signal received\n")
+	log.Print(sig)
+	mqttMessage := MqttMessage{MqttShutdown, "", "", 2}
+	mqttMessage.mqttSendMessage(mqttMessages)
+	processMessage := ProcessMessage{ProcessShutdown, ""}
+	processMessage.processSendMessage(processMessages)
 
 	print("Waiting for completion\n")
 	waitGroup.Wait()

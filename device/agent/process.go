@@ -37,7 +37,6 @@ func launchProcess(
 	mqttMessages chan MqttMessage,
 	waitGroup *sync.WaitGroup,
 ) {
-
 	waitGroup.Add(1)
 	defer waitGroup.Done()
 
@@ -160,6 +159,7 @@ func launchProcessAux(
 				"supervisor",
 				2}
 			supervisorMessage.mqttSendMessage(mqttMessages)
+			fmt.Print(string(currentLine))
 			currentLine = []byte{}
 		}
 	}
