@@ -31,6 +31,7 @@ export default defineComponent({
     });
 
     onMounted(async () => (state.deviceList = await getDeviceList()));
+    onMounted(() => setInterval(async () => (state.deviceList = await getDeviceList()), 10000));
 
     return { state };
   },

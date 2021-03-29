@@ -45,6 +45,7 @@ export default defineComponent({
     });
 
     onMounted(async () => (state.device = await getDevice(props.pk)));
+    onMounted(() => setInterval(async () => (state.device = await getDevice(props.pk)), 10000));
 
     const telemetryApi = process.env.VUE_APP_ROOT_API + "/api/telemetry/";
     const telemetryExample = process.env.VUE_APP_ROOT_API + "/api/telemetry/?start=2021-02-10&end=2021-02-12&device=";
