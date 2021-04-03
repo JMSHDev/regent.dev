@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"log"
+	"net"
 	"os"
 )
 
@@ -30,7 +31,6 @@ type ProcessConfig struct {
 type MqttConfig struct {
 	MqttAddress     string
 	PlatformAddress string
-	Username        string
 	CustomerId      string
 	DeviceId        string
 	CaPath          string
@@ -55,9 +55,8 @@ func loadConfig() (MqttConfig, ProcessConfig, error) {
 	mqttConfig := MqttConfig{
 		MqttAddress:     config.MqttAddress,
 		PlatformAddress: config.PlatformAddress,
-		Username:        config.DeviceId,
 		CustomerId:      config.CustomerId,
-		DeviceId:        config.DeviceId,
+		DeviceId:        getDeviceId(),
 		CaPath:          config.CaPath,
 	}
 
@@ -69,6 +68,34 @@ func loadConfig() (MqttConfig, ProcessConfig, error) {
 	}
 
 	return mqttConfig, processConfig, nil
+}
+
+func getDeviceId() string {
+	macAddresses, err := getMacAddress()
+	if err != nil {
+		log.Fatal(err)
+	}
+	return macAddresses[0]
+}
+
+func getMacAddress() ([]string, error) {
+	networkInterfaces, err := net.Interfaces()
+	if err != nil {
+		return nil, err
+	}
+
+	if len(networkInterfaces) == 0 {
+		return nil, fmt.Errorf("now valid mac address")
+	}
+
+	var macAddresses []string
+	for _, networkInterface := range networkInterfaces {
+		macAddress := networkInterface.HardwareAddr.String()
+		if macAddress != "" {
+			macAddresses = append(macAddresses, macAddress)
+		}
+	}
+	return macAddresses, nil
 }
 
 func saveDefaultConfig() Config {
@@ -83,7 +110,7 @@ func saveDefaultConfig() Config {
 		Arguments:        "",
 		AutoRestart:      true,
 		RestartDelayMs:   10000,
-		DeviceId:         "deviceID",
+		DeviceId:         getDeviceId(),
 		CustomerId:       "sample_id",
 		MqttAddress:      "ssl://localhost:8883",
 		PlatformAddress:  "http://localhost",

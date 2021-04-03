@@ -190,7 +190,7 @@ func subscribeToMqttServer(
 	opts.SetKeepAlive(10)
 	opts.SetOnConnectHandler(onConnectHandler)
 	opts.SetConnectionLostHandler(onConnectionLostHandler)
-	opts.SetUsername(mqttConfig.Username)
+	opts.SetUsername(mqttConfig.DeviceId)
 	opts.SetPassword(mqttPassword)
 	opts.SetMaxReconnectInterval(5 * time.Second)
 	opts.SetWill(stateTopic, mqttPayloadOffline, 2, true)
